@@ -310,3 +310,18 @@ input:focus, select:focus{
   .btn{ width: 100%; }
   .row{ width: 100%; }
 }
+.live-status,
+.last-refreshed,
+.update-card {
+  background: rgba(255, 215, 0, 0.08);
+  border: 1px solid rgba(255, 215, 0, 0.35);
+  color: #ffd700;
+  padding: 16px;
+  border-radius: 12px;
+  margin: 12px 0;
+}
+
+.update-card h3 {
+  margin-top: 0;
+  color: #ffd700;
+}
