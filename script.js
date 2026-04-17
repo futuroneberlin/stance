@@ -1,13 +1,24 @@
 const SUPABASE_URL = "https://ijtvuoiszkdrcmathlhf.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlqdHZ1b2lzemtkcmNtYXRobGhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MjU3NTIsImV4cCI6MjA5MjAwMTc1Mn0.phxMT0pYo0muJeXeSjX_bxnYcI2p-Tebm4AgterlhTQ";
 
-if (!window.supabase) {
-  console.error("Supabase client library not loaded.");
+let supabase = null;
+
+function initSupabaseClient() {
+  if (window.supabase && typeof window.supabase.createClient === "function") {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log("[stance] Supabase client initialized");
+    return true;
+  }
+  console.error("[stance] Supabase client library not available on window. Check CDN load.");
+  return false;
 }
 
-const supabase = window.supabase?.createClient?.(SUPABASE_URL, SUPABASE_ANON_KEY);
+if (!initSupabaseClient()) {
+  window.addEventListener("load", initSupabaseClient, { once: true });
+}
 
 const THROTTLE_MS = 20_000;
+const FETCH_TIMEOUT_MS = 12_000;
 const LAST_POST_KEY = "futurone:lastPostAt";
 const HAS_SUBMITTED_KEY = "futurone:hasSubmitted";
 const MAX_VISIBLE_CATEGORIES = 24; // keep market scannable while still showing broad category coverage
@@ -161,12 +172,23 @@ function startThrottleUI() {
 }
 
 async function fetchEntries() {
-  if (!supabase) throw new Error("Supabase client missing.");
-  const { data, error } = await supabase
+  if (!supabase && !initSupabaseClient()) {
+    throw new Error("Supabase client missing.");
+  }
+  const fetchPromise = supabase
     .from("entries")
     .select("id, text, chapter, created_at")
     .order("created_at", { ascending: false })
     .limit(300);
+
+  let timeoutId = null;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(`Loading entries timed out after ${FETCH_TIMEOUT_MS}ms.`)), FETCH_TIMEOUT_MS);
+  });
+
+  const { data, error } = await Promise.race([fetchPromise, timeoutPromise]).finally(() => {
+    if (timeoutId) clearTimeout(timeoutId);
+  });
   if (error) throw error;
   return data || [];
 }
@@ -369,7 +391,8 @@ async function startPolling() {
     setBoardStatus(latestCache.length ? "" : "No entries yet — be the first to post.");
   } catch (e) {
     console.error("Initial load failed", e);
-    setBoardStatus("Could not load glossary. You can still submit.");
+    setBoardStatus("Could not load glossary. Please reload or try again shortly.");
+    setStatus("Live board unavailable right now. You can still submit an entry.");
   }
 
   pollTimer = setInterval(async () => {
@@ -392,6 +415,7 @@ async function showGlossary() {
     startRealtime();
   } catch (err) {
     console.error("showGlossary error", err);
+    setBoardStatus("Could not open glossary. Please reload.");
     setStatus("Could not load glossary. Try reloading.");
     showSubmitPanel();
   }
@@ -417,7 +441,9 @@ form?.addEventListener("submit", async (ev) => {
   setStatus("Submitting…");
 
   try {
-    if (!supabase) throw new Error("Supabase client not available (are you testing via file://?).");
+    if (!supabase && !initSupabaseClient()) {
+      throw new Error("Supabase client not available (are you testing via file://?).");
+    }
     // .select() is used to get the inserted row for immediate real-time-like UI feedback (supabase-js v2 CDN in index.html).
     const { error, data } = await supabase.from("entries").insert([{ text, chapter }]).select();
     if (error) throw error;
@@ -431,7 +457,7 @@ form?.addEventListener("submit", async (ev) => {
     await showGlossary();
   } catch (err) {
     console.error("submit failed", err);
-    setStatus("Submit failed. See console.");
+    setStatus("Submit failed. Could not connect to live board.");
     if (submitBtn) submitBtn.disabled = false;
   } finally {
     sending = false;
