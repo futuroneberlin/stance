@@ -68,3 +68,51 @@ document.addEventListener('DOMContentLoaded', function() {
 
     setInterval(displayGlossary, 4000);
 });
+const REFRESH_INTERVAL = 7 * 60 * 60 * 1000;
+
+async function loadLiveArtData() {
+  try {
+    document.getElementById("liveStatus").textContent = "Refreshing art updates...";
+
+    const [definitionsRes, connectionsRes, metadataRes] = await Promise.all([
+      fetch("public/survey/definitions.json", { cache: "no-store" }),
+      fetch("public/survey/connections.json", { cache: "no-store" }),
+      fetch("public/survey/metadata.json", { cache: "no-store" })
+    ]);
+
+    const definitions = await definitionsRes.json();
+    const connections = await connectionsRes.json();
+    const metadata = await metadataRes.json();
+
+    renderLiveArtUpdates(definitions, connections, metadata);
+
+    document.getElementById("liveStatus").textContent = "Live art updates loaded successfully.";
+    document.getElementById("lastRefreshed").textContent =
+      "Last refreshed: " + new Date().toLocaleString();
+  } catch (error) {
+    console.error("Failed to load live art data:", error);
+    document.getElementById("liveStatus").textContent =
+      "Could not load live updates right now. Please try again.";
+  }
+}
+
+function renderLiveArtUpdates(definitions, connections, metadata) {
+  const container = document.getElementById("networkContainer");
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="update-card">
+      <h3>Latest Art Signals</h3>
+      <p>Total definitions: ${definitions.length || 0}</p>
+      <p>Total connections: ${connections.length || 0}</p>
+      <p>Source count: ${metadata?.sources?.length || 0}</p>
+    </div>
+  `;
+}
+
+function startAutoRefresh() {
+  loadLiveArtData();
+  setInterval(loadLiveArtData, REFRESH_INTERVAL);
+}
+
+window.addEventListener("DOMContentLoaded", startAutoRefresh);
