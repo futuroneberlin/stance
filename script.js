@@ -21,6 +21,7 @@ const HTML_ESCAPE_MAP = {
   ">": "&gt;",
   "\"": "&quot;",
   "'": "&#39;",
+  "`": "&#96;",
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -53,7 +54,10 @@ document.addEventListener("DOMContentLoaded", () => {
     graphView: null,
   };
 
-  const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+  const clamp = (value, min, max) => {
+    if (Number.isNaN(value)) return min;
+    return Math.max(min, Math.min(max, value));
+  };
 
   const colorBySource = (source) => {
     if (source === "wikipedia") return "#4d98ff";
@@ -112,7 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     recentEntriesEl.innerHTML = recent
       .map((entry) => {
-        const time = new Date(entry.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        const time = new Date(entry.timestamp).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
         return `
           <li class="recentItem">
             <div class="recentMeta"><span>${escapeHtml(entry.category)}</span><span>${time}</span></div>
@@ -189,7 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }));
 
     sourceCountsEl.innerHTML = ordered
-      .map((item) => `<li class="sourceCountItem" aria-label="${item.name}: ${item.value}"><span>${item.name}</span><strong>${item.value}</strong></li>`)
+      .map((item) => `<li class="sourceCountItem" aria-label="${escapeHtml(item.name)}: ${item.value}"><span>${item.name}</span><strong>${item.value}</strong></li>`)
       .join("");
   }
 
@@ -323,14 +327,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const width = Math.max(500, networkContainer.clientWidth);
-    const height = Math.max(MIN_GRAPH_HEIGHT, Math.min(MAX_GRAPH_HEIGHT, Math.floor(window.innerHeight * GRAPH_HEIGHT_VIEWPORT_RATIO)));
+    const height = clamp(Math.floor(window.innerHeight * GRAPH_HEIGHT_VIEWPORT_RATIO), MIN_GRAPH_HEIGHT, MAX_GRAPH_HEIGHT);
 
     const svg = d3
       .select(networkContainer)
       .append("svg")
       .attr("width", width)
       .attr("height", height)
-      .attr("viewBox", `0 0 ${width} ${height}`);
+      .attr("viewBox", `0 0 ${width} ${height}`)
+      .attr("role", "img")
+      .attr("aria-label", "Living glossary network graph");
 
     const links = displayLinks.map((link) => ({
       source: typeof link.source === "object" ? link.source.id : link.source,
