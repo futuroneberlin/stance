@@ -1,6 +1,6 @@
 :root{
-  --yellow:#FFD700;
-  --bg:#000;
+    --bg:#FFD700;       /* full yellow page background */
+  --text:rgba(0,0,0,0.92);
   --text:rgba(255,255,255,0.92);
   --muted:rgba(255,255,255,0.60);
   --muted2:rgba(255,255,255,0.42);
@@ -19,8 +19,22 @@
 html, body{ height:100%; }
 body{
   margin:0;
-  background:var(--bg);
-  color:var(--text);
+ /* Make dark panels readable on full yellow background */
+.glossary{
+  background: rgba(0,0,0,0.86);
+  border-color: rgba(0,0,0,0.28);
+}
+.term{
+  background: rgba(0,0,0,0.35);
+}
+.liveCard{
+  background: rgba(0,0,0,0.20);
+  border: 1px solid rgba(0,0,0,0.22);
+  border-radius: 12px;
+  padding: 12px;
+  margin: 10px 0;
+  color: rgba(0,0,0,0.92);
+}
   font-family: Inter, Helvetica, Arial, sans-serif;
   overflow-x:hidden;
 }
