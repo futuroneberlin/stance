@@ -70,6 +70,25 @@ body.isStart .glow{
   margin: 12vh auto 0 auto;
 }
 
+.exploreBtn{
+  display: block;
+  margin-top: 28px;
+  background: none;
+  border: none;
+  color: rgba(255,215,0,0.72);
+  font-size: 13px;
+  letter-spacing: 0.6px;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.exploreBtn:hover{ color: #FFD700; }
+
+.addEntryBtn{
+  margin-left: 4px;
+}
+
 .q{
   margin: 0 0 18px 0;
   font-family: "Archivo Black", system-ui, sans-serif;

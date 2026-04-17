@@ -12,21 +12,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const crawlProgressBar = document.getElementById('crawlProgressBar');
     const networkStats = document.getElementById('networkStats');
     const trendingList = document.getElementById('trendingList');
+    const exploreBtn = document.getElementById('exploreBtn');
+    const addEntryBtn = document.getElementById('addEntryBtn');
 
     const TAB_GLOSSARY = 'glossary';
     const TAB_NETWORK = 'network';
     let activeTab = TAB_GLOSSARY;
     let networkData = null;
     let bundledData = null;
-
-    const CATEGORY_COLORS = {
-        concept: '#FFD700',
-        movement: '#FFFFFF',
-        medium: '#a0a0a0',
-        theory: '#f4de7f',
-        institution: '#f5f5f5',
-        person: '#ffe066'
-    };
 
     function safeParse(value, fallback) {
         try {
@@ -168,108 +161,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function renderNetwork(data) {
-        if (!window.d3) {
-            setCrawlerStatus('D3 failed to load.', 'error');
-            return;
-        }
-
-        const graphEl = document.getElementById('networkGraph');
-        const width = graphEl.clientWidth || 900;
-        const height = 460;
-        const definitions = (data.definitions || []).slice(0, 80);
-        const definitionIds = new Set(definitions.map(function (item) { return item.id; }));
-        const links = (data.connections || []).filter(function (edge) {
-            return definitionIds.has(edge.source) && definitionIds.has(edge.target);
-        }).slice(0, 180);
-
         renderStats(data.metadata);
         renderTrending(data.trending || []);
 
-        const svg = d3.select('#networkGraph')
-            .attr('viewBox', [0, 0, width, height].join(' '));
+        if (!window.FuturNetwork) {
+            setCrawlerStatus('network.js failed to load.', 'error');
+            return;
+        }
 
-        svg.selectAll('*').remove();
-
-        const root = svg.append('g');
-        svg.call(d3.zoom().scaleExtent([0.45, 4]).on('zoom', function (event) {
-            root.attr('transform', event.transform);
-        }));
-
-        const link = root.append('g')
-            .attr('stroke', 'rgba(255,255,255,0.2)')
-            .attr('stroke-opacity', 0.8)
-            .selectAll('line')
-            .data(links)
-            .join('line')
-            .attr('stroke-width', function (d) { return Math.min(4.5, 0.6 + d.weight * 0.35); });
-
-        const node = root.append('g')
-            .attr('stroke', '#000')
-            .attr('stroke-width', 1)
-            .selectAll('circle')
-            .data(definitions)
-            .join('circle')
-            .attr('r', function (d) { return Math.max(4, Math.min(14, 4 + Math.log2((d.importance || 1) + 1))); })
-            .attr('fill', function (d) { return CATEGORY_COLORS[d.category] || CATEGORY_COLORS.concept; })
-            .call(dragBehavior())
-            .append('title')
-            .text(function (d) { return `${d.title}\n${d.definition}`; });
-
-        const labels = root.append('g')
-            .selectAll('text')
-            .data(definitions)
-            .join('text')
-            .attr('fill', '#FFFFFF')
-            .attr('font-size', 10)
-            .attr('dx', 8)
-            .attr('dy', 3)
-            .text(function (d) { return d.title.length > 24 ? `${d.title.slice(0, 24)}…` : d.title; });
-
-        const simulation = d3.forceSimulation(definitions)
-            .force('link', d3.forceLink(links).id(function (d) { return d.id; }).distance(58))
-            .force('charge', d3.forceManyBody().strength(-115))
-            .force('center', d3.forceCenter(width / 2, height / 2))
-            .force('collision', d3.forceCollide().radius(function (d) { return Math.max(8, Math.min(16, 6 + Math.log2((d.importance || 1) + 1))); }));
-
-        simulation.on('tick', function () {
-            link
-                .attr('x1', function (d) { return d.source.x; })
-                .attr('y1', function (d) { return d.source.y; })
-                .attr('x2', function (d) { return d.target.x; })
-                .attr('y2', function (d) { return d.target.y; });
-
-            d3.select('#networkGraph g').selectAll('circle')
-                .attr('cx', function (d) { return d.x; })
-                .attr('cy', function (d) { return d.y; });
-
-            labels
-                .attr('x', function (d) { return d.x; })
-                .attr('y', function (d) { return d.y; });
-        });
-
-        function dragBehavior() {
-            function dragstarted(event) {
-                if (!event.active) {
-                    simulation.alphaTarget(0.3).restart();
-                }
-                event.subject.fx = event.subject.x;
-                event.subject.fy = event.subject.y;
-            }
-
-            function dragged(event) {
-                event.subject.fx = event.x;
-                event.subject.fy = event.y;
-            }
-
-            function dragended(event) {
-                if (!event.active) {
-                    simulation.alphaTarget(0);
-                }
-                event.subject.fx = null;
-                event.subject.fy = null;
-            }
-
-            return d3.drag().on('start', dragstarted).on('drag', dragged).on('end', dragended);
+        const ok = window.FuturNetwork.render('networkGraph', data);
+        if (!ok) {
+            setCrawlerStatus('D3 failed to load.', 'error');
         }
     }
 
@@ -349,6 +251,25 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    function openGlossary(tab) {
+        activeTab = tab || TAB_GLOSSARY;
+        submitPanel.classList.add('isHidden');
+        glossaryPanel.classList.remove('isHidden');
+        renderTabs();
+        renderPanels();
+        displayGlossary();
+    }
+
+    exploreBtn.addEventListener('click', function () {
+        openGlossary(TAB_NETWORK);
+    });
+
+    addEntryBtn.addEventListener('click', function () {
+        glossaryPanel.classList.add('isHidden');
+        submitPanel.classList.remove('isHidden');
+        inputField.focus();
+    });
+
     stanceForm.addEventListener('submit', function (event) {
         event.preventDefault();
         const entry = inputField.value.trim();
@@ -378,10 +299,7 @@ document.addEventListener('DOMContentLoaded', function () {
         saveEntries(entries);
         inputField.value = '';
 
-        submitPanel.classList.add('isHidden');
-        glossaryPanel.classList.remove('isHidden');
-
-        displayGlossary();
+        openGlossary(TAB_GLOSSARY);
     });
 
     renderTabs();
