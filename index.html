@@ -12,61 +12,90 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <main class="page">
-    <!-- SUBMIT SCREEN -->
-    <section id="submitPanel" class="submit">
-      <h1 class="q">I acted through art today by…</h1>
-
-      <form id="stanceForm" class="form">
-        <input
-          id="inputField"
-          type="text"
-          placeholder="Write your action…"
-          required
-          maxlength="220"
-          autocomplete="off"
-        />
-
-        <input type="hidden" id="chapter" value="general" />
-
-        <div class="row">
-          <button id="submitBtn" class="btn" type="submit">Submit</button>
+  <main class="page splitLayout">
+    <section class="leftPanel">
+      <div class="panel tickerPanel" aria-live="polite">
+        <div class="panelTitleRow">
+          <h2 class="panelTitle">Worldwide open web</h2>
+          <span id="tickerSource" class="sourceTag sourceTag--unknown">Loading</span>
         </div>
+        <div id="tickerWord" class="tickerWord">Loading latest terms…</div>
+      </div>
 
-        <p id="status" class="status" aria-live="polite"></p>
-      </form>
+      <div class="panel surveyPanel">
+        <h1 class="q">I acted through art today by…</h1>
+
+        <form id="stanceForm" class="form">
+          <label class="srOnly" for="inputField">Your art action</label>
+          <input
+            id="inputField"
+            type="text"
+            placeholder="Write your action"
+            maxlength="220"
+            autocomplete="off"
+          />
+
+          <div class="row row--stackMobile">
+            <label class="srOnly" for="categorySelect">Category</label>
+            <select id="categorySelect">
+              <option value="general">General</option>
+              <option value="making">Making</option>
+              <option value="care">Care</option>
+              <option value="resistance">Resistance</option>
+              <option value="learning">Learning</option>
+            </select>
+            <button id="submitBtn" class="btn" type="submit">Add Entry</button>
+          </div>
+
+          <p id="status" class="status" aria-live="polite"></p>
+        </form>
+      </div>
+
+      <div class="panel recentPanel">
+        <h2 class="panelTitle">Your recent entries</h2>
+        <ul id="recentEntries" class="recentList"></ul>
+      </div>
     </section>
 
-    <!-- GLOSSARY SCREEN -->
-    <section id="glossaryPanel" class="glossary isHidden">
-      <header class="glossaryHeader">
-        <div class="left">
-          <img class="logo" src="logo.png" alt="Futur One" />
-          <div class="hint">LIVE</div>
+    <section class="rightPanel">
+      <div class="panel networkPanel">
+        <div class="panelTitleRow">
+          <h2 class="panelTitle">Living Glossary Mapping</h2>
+          <div class="controlsRow">
+            <label class="toggleWrap">
+              <input id="showAllNodesToggle" type="checkbox" />
+              <span>Show all nodes</span>
+            </label>
+            <button id="refreshNowBtn" class="btn btn--small" type="button">Refresh now</button>
+          </div>
         </div>
 
-        <div class="controls">
-          <div id="tabs" class="tabs" aria-label="Categories"></div>
-        </div>
-      </header>
+        <div id="liveStatus" class="liveStatus">Loading latest updates…</div>
+        <div id="lastRefreshed" class="lastRefreshed"></div>
 
-      <!-- LIVE ART UPDATES (now inside the actual UI panel) -->
-      <section class="liveBlock" aria-label="Live Art Updates">
-        <div class="liveTitle">Live Art Updates</div>
-        <div class="liveCopy">
-          Updates from the FUTUR ONE crawler (open/free sources). Auto-refresh every 7 hours.
-        </div>
-        <div id="liveStatus" class="live-status">Loading latest updates...</div>
-        <div id="lastRefreshed" class="last-refreshed"></div>
         <div id="networkContainer" class="networkContainer"></div>
-      </section>
+      </div>
 
-      <div id="market" class="market"></div>
-      <div id="single" class="single isHidden"></div>
+      <div class="panel summaryPanel">
+        <h2 class="panelTitle">Living Glossary Summary</h2>
+
+        <div class="summaryGrid">
+          <div>
+            <h3 class="summaryTitle">Trending terms</h3>
+            <ul id="trendingList" class="trendingList"></ul>
+          </div>
+          <div>
+            <h3 class="summaryTitle">Source counts</h3>
+            <ul id="sourceCounts" class="sourceCounts"></ul>
+          </div>
+        </div>
+
+        <div id="trendChart" class="trendChart"></div>
+      </div>
     </section>
   </main>
 
-     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script src="script.js"></script>
 </body>
 </html>
