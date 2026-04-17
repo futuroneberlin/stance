@@ -29,6 +29,11 @@
 
         <input type="hidden" id="chapter" value="general" />
 
+        <div class="formMeta">
+          <p id="categoryPreview" class="categoryPreview">Category: <strong>general</strong></p>
+          <p id="charCounter" class="charCounter">0 / 220</p>
+        </div>
+
         <div class="row">
           <button id="submitBtn" class="btn" type="submit">Submit</button>
         </div>
@@ -50,6 +55,7 @@
         </div>
       </header>
 
+      <p id="boardStatus" class="boardStatus" aria-live="polite"></p>
       <div id="market" class="market"></div>
       <div id="single" class="single isHidden"></div>
     </section>
