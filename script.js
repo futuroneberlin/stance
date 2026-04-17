@@ -10,6 +10,13 @@ const HUB_NODE_ID = "hub:art";
 const MIN_GRAPH_HEIGHT = 460;
 const MAX_GRAPH_HEIGHT = 700;
 const GRAPH_HEIGHT_VIEWPORT_RATIO = 0.68;
+const HTML_ESCAPE_MAP = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  "\"": "&quot;",
+  "'": "&#39;",
+};
 
 document.addEventListener("DOMContentLoaded", () => {
   const stanceForm = document.getElementById("stanceForm");
@@ -39,6 +46,16 @@ document.addEventListener("DOMContentLoaded", () => {
     tickerTimer: null,
     focusedNodeId: null,
     graphView: null,
+  };
+
+  const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+
+  const colorBySource = (source) => {
+    if (source === "wikipedia") return "#4d98ff";
+    if (source === "wikidata") return "#bf60ff";
+    if (source === "met") return "#ff6d6d";
+    if (source === "hub") return "#ffd700";
+    return "#bfbfbf";
   };
 
   function safeReadJSON(key, fallback) {
@@ -167,7 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }));
 
     sourceCountsEl.innerHTML = ordered
-      .map((item) => `<li class="sourceCountItem"><span>${item.name}</span><strong>${item.value}</strong></li>`)
+      .map((item) => `<li class="sourceCountItem" aria-label="${item.name}: ${item.value}"><span>${item.name}</span><strong>${item.value}</strong></li>`)
       .join("");
   }
 
@@ -333,14 +350,6 @@ document.addEventListener("DOMContentLoaded", () => {
       .join("line")
       .attr("stroke-width", 1.2);
 
-    const colorBySource = (source) => {
-      if (source === "wikipedia") return "#4d98ff";
-      if (source === "wikidata") return "#bf60ff";
-      if (source === "met") return "#ff6d6d";
-      if (source === "hub") return "#ffd700";
-      return "#bfbfbf";
-    };
-
     const node = svg
       .append("g")
       .selectAll("circle")
@@ -400,8 +409,6 @@ document.addEventListener("DOMContentLoaded", () => {
       .on("click", (_, d) => {
         focusNode(d.id);
       });
-
-    const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
     sim.on("tick", () => {
       link
@@ -486,14 +493,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function escapeHtml(raw) {
-    const htmlMap = {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      "\"": "&quot;",
-      "'": "&#39;",
-    };
-    return String(raw).replace(/[&<>"']/g, (char) => htmlMap[char] || char);
+    return String(raw).replace(/[&<>"']/g, (char) => HTML_ESCAPE_MAP[char] || char);
   }
 
   function getOrCreateTooltip() {
@@ -545,7 +545,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const ok = saveEntry(inputField?.value || "", categorySelect?.value || "general");
     if (!ok) {
-      if (status) status.textContent = "Please enter an action before submitting.";
+      if (status) status.textContent = "Entry cannot be empty.";
       return;
     }
 
