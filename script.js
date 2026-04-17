@@ -409,15 +409,15 @@ async function startPolling() {
 }
 
 async function showGlossary() {
+  // Always navigate to the glossary panel first so the user is never
+  // bounced back to the submit form after a successful insert.
+  showGlossaryPanel();
   try {
-    showGlossaryPanel();
     await startPolling();
     startRealtime();
   } catch (err) {
     console.error("showGlossary error", err);
-    setBoardStatus("Could not open glossary. Please reload.");
-    setStatus("Could not load glossary. Try reloading.");
-    showSubmitPanel();
+    setBoardStatus("Could not load entries. Please reload.");
   }
 }
 
@@ -454,7 +454,10 @@ form?.addEventListener("submit", async (ev) => {
     if (input) input.value = "";
     updateInputMeta();
     setStatus("");
-    await showGlossary();
+    // Navigate to glossary immediately; entry loading runs in the background.
+    // Errors here must not re-show the submit panel or report a "Submit failed"
+    // message when the insert itself succeeded.
+    showGlossary().catch((err) => console.error("showGlossary after submit:", err));
   } catch (err) {
     console.error("submit failed", err);
     setStatus("Submit failed. Could not connect to live board.");
