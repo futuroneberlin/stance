@@ -6,6 +6,10 @@ const MAX_TRENDING = 8;
 const DEFAULT_NODE_LIMIT = 36;
 const NODE_BOUNDARY_PADDING = 12;
 const RESIZE_DEBOUNCE_MS = 180;
+const HUB_NODE_ID = "hub:art";
+const MIN_GRAPH_HEIGHT = 460;
+const MAX_GRAPH_HEIGHT = 700;
+const GRAPH_HEIGHT_VIEWPORT_RATIO = 0.68;
 
 document.addEventListener("DOMContentLoaded", () => {
   const stanceForm = document.getElementById("stanceForm");
@@ -106,7 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateTickerTerms(nodes) {
-    state.tickerTerms = (nodes || []).filter((node) => node && node.id !== "hub:art");
+    state.tickerTerms = (nodes || []).filter((node) => node && node.id !== HUB_NODE_ID);
 
     if (!state.tickerTerms.length) {
       if (tickerWordEl) tickerWordEl.textContent = "Waiting for live terms…";
@@ -194,10 +198,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const sortedNodes = [...nodes]
-      .filter((node) => node.id !== "hub:art")
+      .filter((node) => node.id !== HUB_NODE_ID)
       .sort((a, b) => (degree.get(b.id) || 0) - (degree.get(a.id) || 0));
 
-    const selectedIds = new Set(["hub:art"]);
+    const selectedIds = new Set([HUB_NODE_ID]);
     sortedNodes.slice(0, DEFAULT_NODE_LIMIT).forEach((node) => selectedIds.add(node.id));
 
     const filteredNodes = nodes.filter((node) => selectedIds.has(node.id));
@@ -254,7 +258,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!trendingListEl) return;
 
     const trending = [...displayNodes]
-      .filter((node) => node.id !== "hub:art")
+      .filter((node) => node.id !== HUB_NODE_ID)
       .map((node) => ({
         ...node,
         mentions: degreeMap.get(node.id) || 0,
@@ -297,7 +301,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const width = Math.max(500, networkContainer.clientWidth);
-    const height = Math.max(460, Math.min(700, Math.floor(window.innerHeight * 0.68)));
+    const height = Math.max(MIN_GRAPH_HEIGHT, Math.min(MAX_GRAPH_HEIGHT, Math.floor(window.innerHeight * GRAPH_HEIGHT_VIEWPORT_RATIO)));
 
     const svg = d3
       .select(networkContainer)
@@ -342,7 +346,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .selectAll("circle")
       .data(nodes)
       .join("circle")
-      .attr("r", (d) => (d.id === "hub:art" ? 9 : 6.3))
+      .attr("r", (d) => (d.id === HUB_NODE_ID ? 9 : 6.3))
       .attr("fill", (d) => colorBySource(d.source))
       .attr("stroke", "rgba(0,0,0,0.92)")
       .attr("stroke-width", 1.1)
@@ -407,8 +411,14 @@ document.addEventListener("DOMContentLoaded", () => {
         .attr("y2", (d) => d.target.y);
 
       node
-        .attr("cx", (d) => (d.x = clamp(d.x || width / 2, NODE_BOUNDARY_PADDING, width - NODE_BOUNDARY_PADDING)))
-        .attr("cy", (d) => (d.y = clamp(d.y || height / 2, NODE_BOUNDARY_PADDING, height - NODE_BOUNDARY_PADDING)));
+        .attr("cx", (d) => {
+          d.x = clamp(d.x || width / 2, NODE_BOUNDARY_PADDING, width - NODE_BOUNDARY_PADDING);
+          return d.x;
+        })
+        .attr("cy", (d) => {
+          d.y = clamp(d.y || height / 2, NODE_BOUNDARY_PADDING, height - NODE_BOUNDARY_PADDING);
+          return d.y;
+        });
 
       label
         .attr("x", (d) => d.x + 10)
@@ -476,12 +486,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function escapeHtml(raw) {
-    return String(raw)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#39;");
+    const htmlMap = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "\"": "&quot;",
+      "'": "&#39;",
+    };
+    return String(raw).replace(/[&<>"']/g, (char) => htmlMap[char] || char);
   }
 
   function getOrCreateTooltip() {
