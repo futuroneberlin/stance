@@ -199,6 +199,21 @@ input:focus, select:focus{
   border-radius: 999px;
 }
 
+.controls{
+  display:flex;
+  align-items:center;
+  gap: 12px;
+}
+
+.btnAdd{
+  min-width: 0;
+  padding: 8px 14px;
+  font-size: 12px;
+  letter-spacing: 0.4px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
 .tabs{
   display:flex;
   flex-wrap: wrap;

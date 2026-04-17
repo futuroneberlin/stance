@@ -42,6 +42,7 @@ const marketEl = document.getElementById("market");
 const singleEl = document.getElementById("single");
 const tabsEl = document.getElementById("tabs");
 const boardStatusEl = document.getElementById("boardStatus");
+const addEntryBtn = document.getElementById("addEntryBtn");
 
 let pollTimer = null;
 let latestCache = [];
@@ -470,6 +471,11 @@ form?.addEventListener("submit", async (ev) => {
 input?.addEventListener("input", updateInputMeta);
 input?.addEventListener("focus", () => categoryPreviewEl?.classList.add("isFocus"));
 input?.addEventListener("blur", () => categoryPreviewEl?.classList.remove("isFocus"));
+
+addEntryBtn?.addEventListener("click", () => {
+  showSubmitPanel();
+  input?.focus();
+});
 
 function init() {
   startThrottleUI();
