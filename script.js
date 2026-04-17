@@ -2,58 +2,84 @@ document.addEventListener('DOMContentLoaded', function() {
     const stanceForm = document.getElementById('stanceForm');
     const submitPanel = document.getElementById('submitPanel');
     const glossaryPanel = document.getElementById('glossaryPanel');
-    const entriesList = document.getElementById('entriesList');
+    const inputField = document.getElementById('inputField');
+    const market = document.getElementById('market');
 
+    // Handle form submission
     stanceForm.addEventListener('submit', function(event) {
         event.preventDefault();
-        const formData = new FormData(stanceForm);
-        const entry = formData.get('entry');
+        const entry = inputField.value.trim();
 
-        // Parse category from input
-        const categoryMatch = entry.match(/^(?<category>\S+): (?<text>.+)$/) || entry.match(/^(?:#|)(?<category>\S+) (?<text>.+)$/);
+        if (!entry) return;
+
+        // Parse category: "design: text" or "#design text"
+        const categoryMatch = entry.match(/^(?<category>\S+):\s*(?<text>.+)$/) || 
+                            entry.match(/^#(?<category>\S+)\s+(?<text>.+)$/);
 
         if (categoryMatch && categoryMatch.groups) {
             const category = categoryMatch.groups.category;
             const text = categoryMatch.groups.text;
 
-            // Store entry in localStorage
+            // Store in localStorage
             let artEntries = JSON.parse(localStorage.getItem('artEntries')) || {};
             if (!artEntries[category]) {
                 artEntries[category] = [];
             }
-            artEntries[category].push(text);
+            artEntries[category].push({text, timestamp: new Date().toLocaleTimeString()});
             localStorage.setItem('artEntries', JSON.stringify(artEntries));
 
-            // Update glossary display
-            displayGlossary();
+            // Clear input
+            inputField.value = '';
 
-            // Hide submit panel and show glossary panel
-            submitPanel.style.display = 'none';
-            glossaryPanel.style.display = 'block';
-        } else {
-            console.error('Invalid input format. Please use "category: text" or "#category text".');
+            // Switch to glossary
+            submitPanel.classList.add('isHidden');
+            glossaryPanel.classList.remove('isHidden');
+            displayGlossary();
         }
     });
 
     function displayGlossary() {
-        entriesList.innerHTML = ''; // Clear previous entries
+        market.innerHTML = '';
         let artEntries = JSON.parse(localStorage.getItem('artEntries')) || {};
+        
         for (const category in artEntries) {
-            const categoryPanel = document.createElement('div');
-            categoryPanel.className = 'category-panel';
-            const header = document.createElement('h3');
-            header.innerText = category;
-            categoryPanel.appendChild(header);
+            const term = document.createElement('div');
+            term.className = 'term';
+            
+            const termHead = document.createElement('div');
+            termHead.className = 'termHead';
+            termHead.innerHTML = `
+                <span class="ch">${category}</span>
+                <span class="count">${artEntries[category].length} entries</span>
+            `;
+            term.appendChild(termHead);
 
-            artEntries[category].forEach(entry => {
-                const entryItem = document.createElement('div');
-                entryItem.innerText = entry;
-                categoryPanel.appendChild(entryItem);
+            const cols = document.createElement('div');
+            cols.className = 'cols';
+            cols.innerHTML = `<div>Time</div><div>Entry</div>`;
+            term.appendChild(cols);
+
+            const rows = document.createElement('div');
+            rows.className = 'rows';
+            
+            artEntries[category].forEach((entry, index) => {
+                const rowItem = document.createElement('div');
+                rowItem.className = 'rowItem';
+                if (index === artEntries[category].length - 1) {
+                    rowItem.classList.add('isNew');
+                }
+                rowItem.innerHTML = `
+                    <div class="ts">${entry.timestamp}</div>
+                    <div class="msg">${entry.text}</div>
+                `;
+                rows.appendChild(rowItem);
             });
-            entriesList.appendChild(categoryPanel);
+            
+            term.appendChild(rows);
+            market.appendChild(term);
         }
     }
 
-    // Poll every 4 seconds for updates
+    // Poll every 4 seconds
     setInterval(displayGlossary, 4000);
 });
