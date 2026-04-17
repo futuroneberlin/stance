@@ -310,3 +310,137 @@ input:focus, select:focus{
   .btn{ width: 100%; }
   .row{ width: 100%; }
 }
+.controls{
+  display:grid;
+  gap: 8px;
+  justify-items: end;
+}
+
+.crawlerMeta{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.crawlerStatus{
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+}
+
+.crawlerStatus[data-kind="ok"]{ color: rgba(255,215,0,0.95); }
+.crawlerStatus[data-kind="warning"]{ color: #ffe799; }
+.crawlerStatus[data-kind="error"]{ color: #ff9b9b; }
+
+.miniBtn{
+  border: 1px solid rgba(255,215,0,0.45);
+  background: rgba(255,215,0,0.08);
+  color: var(--yellow);
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 11px;
+  cursor:pointer;
+}
+
+.progressTrack{
+  width: min(280px, 100%);
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.12);
+  overflow:hidden;
+}
+
+.progressBar{
+  display:block;
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255,215,0,0.45), rgba(255,215,0,0.95));
+  transition: width 0.25s ease;
+}
+
+.lastUpdate{
+  font-size: 10px;
+  color: var(--muted2);
+  letter-spacing: 0.5px;
+}
+
+.networkPanel{
+  display:grid;
+  gap: 14px;
+}
+
+.stats{
+  display:grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.stat{
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 12px;
+  background: rgba(0,0,0,0.25);
+  padding: 10px 12px;
+}
+
+.stat .label{
+  display:block;
+  font-size: 10px;
+  color: var(--muted2);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.stat .value{
+  display:block;
+  margin-top: 4px;
+  font-size: 18px;
+  color: var(--yellow);
+}
+
+.graphWrap{
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 14px;
+  background: rgba(0,0,0,0.28);
+  min-height: 460px;
+  overflow:hidden;
+}
+
+.networkGraph{
+  display:block;
+  width: 100%;
+  height: 460px;
+}
+
+.trendBox{
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 14px;
+  background: rgba(0,0,0,0.18);
+  padding: 12px 14px;
+}
+
+.trendTitle{
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255,215,0,0.9);
+  margin-bottom: 8px;
+}
+
+.trendingList{
+  margin: 0;
+  padding-left: 18px;
+  display:grid;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.trendWeight{
+  color: var(--muted2);
+}
+
+@media (max-width: 980px){
+  .stats{ grid-template-columns: 1fr; }
+  .controls{ justify-items: start; }
+}

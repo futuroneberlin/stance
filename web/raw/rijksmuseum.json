@@ -1,0 +1,8 @@
+{
+  "source": "rijksmuseum",
+  "updatedAt": "2026-04-17T18:49:19.309Z",
+  "data": {
+    "query": "collection art",
+    "note": "Seed snapshot placeholder for local/static fallback"
+  }
+}
