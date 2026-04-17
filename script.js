@@ -116,3 +116,71 @@ function startAutoRefresh() {
 }
 
 window.addEventListener("DOMContentLoaded", startAutoRefresh);
+const REFRESH_INTERVAL = 7 * 60 * 60 * 1000;
+
+function showGlossary() {
+  const submitPanel = document.getElementById("submitPanel");
+  const glossaryPanel = document.getElementById("glossaryPanel");
+
+  if (submitPanel) submitPanel.classList.add("isHidden");
+  if (glossaryPanel) glossaryPanel.classList.remove("isHidden");
+}
+
+async function refreshData() {
+  const liveStatus = document.getElementById("liveStatus");
+  const lastRefreshed = document.getElementById("lastRefreshed");
+  const networkContainer = document.getElementById("networkContainer");
+
+  try {
+    if (liveStatus) liveStatus.textContent = "Refreshing art updates…";
+
+    const [definitionsRes, connectionsRes, metadataRes] = await Promise.all([
+      fetch("public/survey/definitions.json", { cache: "no-store" }),
+      fetch("public/survey/connections.json", { cache: "no-store" }),
+      fetch("public/survey/metadata.json", { cache: "no-store" }),
+    ]);
+
+    const definitions = await definitionsRes.json();
+    const connections = await connectionsRes.json();
+    const metadata = await metadataRes.json();
+
+    // Minimal visible output so you can confirm it works
+    if (networkContainer) {
+      networkContainer.innerHTML = `
+        <div style="padding:12px;border:1px solid rgba(255,215,0,.35);border-radius:12px;background:rgba(255,215,0,.08);">
+          <div><strong>Definitions:</strong> ${(definitions && definitions.length) || 0}</div>
+          <div><strong>Connections:</strong> ${(connections && connections.length) || 0}</div>
+          <div><strong>Sources:</strong> ${(metadata && metadata.sources && metadata.sources.length) || 0}</div>
+        </div>
+      `;
+    }
+
+    if (liveStatus) liveStatus.textContent = "Live art updates loaded.";
+    if (lastRefreshed) lastRefreshed.textContent = "Last refreshed: " + new Date().toLocaleString();
+  } catch (err) {
+    console.error(err);
+    if (liveStatus) liveStatus.textContent = "Failed to load live updates (check console).";
+  }
+}
+
+function scheduleLiveUpdate() {
+  // run once immediately
+  refreshData();
+  // then every 7 hours
+  setInterval(refreshData, REFRESH_INTERVAL);
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  // start the live updates even before submit
+  scheduleLiveUpdate();
+
+  // make submit actually switch screens so user sees change
+  const form = document.getElementById("stanceForm");
+  if (form) {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      showGlossary();
+      refreshData(); // refresh immediately after submit
+    });
+  }
+});
