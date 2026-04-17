@@ -38,15 +38,6 @@
     </section>
 
     <!-- GLOSSARY SCREEN -->
-    <section class="liveBlock" aria-label="Live Art Updates">
-  <div class="liveTitle">Live Art Updates</div>
-  <div class="liveCopy">
-    Updates from the FUTUR ONE crawler (open/free sources). Auto-refresh every 7 hours.
-  </div>
-  <div id="liveStatus" class="live-status">Loading latest updates...</div>
-  <div id="lastRefreshed" class="last-refreshed"></div>
-  <div id="networkContainer" class="networkContainer"></div>
-</section>
     <section id="glossaryPanel" class="glossary isHidden">
       <header class="glossaryHeader">
         <div class="left">
@@ -59,12 +50,23 @@
         </div>
       </header>
 
+      <!-- LIVE ART UPDATES (now inside the actual UI panel) -->
+      <section class="liveBlock" aria-label="Live Art Updates">
+        <div class="liveTitle">Live Art Updates</div>
+        <div class="liveCopy">
+          Updates from the FUTUR ONE crawler (open/free sources). Auto-refresh every 7 hours.
+        </div>
+        <div id="liveStatus" class="live-status">Loading latest updates...</div>
+        <div id="lastRefreshed" class="last-refreshed"></div>
+        <div id="networkContainer" class="networkContainer"></div>
+      </section>
+
       <div id="market" class="market"></div>
       <div id="single" class="single isHidden"></div>
     </section>
   </main>
 
+     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script src="script.js"></script>
 </body>
 </html>
-

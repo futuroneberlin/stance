@@ -1,28 +1,45 @@
 :root{
   --yellow:#FFD700;
-  --bg:#000;
-  --text:rgba(255,255,255,0.92);
-  --muted:rgba(255,255,255,0.60);
-  --muted2:rgba(255,255,255,0.42);
-  --border:rgba(255,255,255,0.12);
-  --border2:rgba(255,255,255,0.08);
-  --panel:rgba(255,255,255,0.06);
-  --panel2:rgba(255,255,255,0.03);
-  --radius:16px;
-  --shadow:0 24px 80px rgba(0,0,0,0.65);
 
-  --flashA: rgba(255,215,0,0.22);
-  --flashB: rgba(255,215,0,0.00);
+  /* full yellow background */
+  --bg:#FFD700;
+
+  /* default text (for page outside dark panels) */
+  --text:rgba(0,0,0,0.92);
+  --muted:rgba(0,0,0,0.65);
+  --muted2:rgba(0,0,0,0.45);
+
+  /* panel colors (dark “terminal” cards on yellow) */
+  --border:rgba(0,0,0,0.18);
+  --border2:rgba(0,0,0,0.10);
+  --panel:rgba(0,0,0,0.86);
+  --panel2:rgba(0,0,0,0.78);
+
+  --radius:16px;
+  --shadow:0 24px 80px rgba(0,0,0,0.35);
+
+  --flashA: rgba(0,0,0,0.08);
+  --flashB: rgba(0,0,0,0.00);
+
+  /* UX extras */
+  --focusRing: 0 0 0 4px rgba(0,0,0,0.12);
 }
 
 *{ box-sizing:border-box; }
 html, body{ height:100%; }
+
 body{
   margin:0;
   background:var(--bg);
   color:var(--text);
   font-family: Inter, Helvetica, Arial, sans-serif;
   overflow-x:hidden;
+}
+
+/* Selection */
+::selection{
+  background: rgba(0,0,0,0.18);
+  color: rgba(0,0,0,0.95);
 }
 
 /* FX background (hidden on start screen by body class from JS) */
@@ -81,40 +98,46 @@ body.isStart .glow{
 
 .form{ display:grid; gap: 12px; }
 
+/* Inputs on yellow background: use light field + dark text for readability */
 input, select{
   width: 100%;
   padding: 12px 12px;
   border-radius: 12px;
   border: 1px solid var(--border);
-  background: rgba(255,255,255,0.03);
-  color: var(--text);
+  background: rgba(255,255,255,0.14);
+  color: rgba(0,0,0,0.92);
   outline: none;
 }
-input::placeholder{ color: rgba(255,255,255,0.40); }
+
+input::placeholder{ color: rgba(0,0,0,0.55); }
+
 input:focus, select:focus{
-  border-color: rgba(255,215,0,0.70);
-  box-shadow: 0 0 0 3px rgba(255,215,0,0.14);
+  border-color: rgba(0,0,0,0.35);
+  box-shadow: var(--focusRing);
 }
 
 .row{
   display:flex;
   justify-content:flex-start;
+  gap: 10px;
 }
 
 .btn{
   min-width: 160px;
   border-radius: 12px;
-  border: 1px solid rgba(255,215,0,0.55);
-  background: rgba(255,215,0,0.10);
+  border: 1px solid rgba(0,0,0,0.30);
+  background: rgba(0,0,0,0.86);
   color: var(--yellow);
   cursor:pointer;
   padding: 12px 14px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.2px;
+  transition: transform 0.06s ease, box-shadow 0.12s ease, background 0.12s ease;
 }
 .btn:hover{
-  box-shadow: 0 0 0 3px rgba(255,215,0,0.10);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.18);
 }
+.btn:active{ transform: translateY(1px); }
 .btn:disabled{ opacity:0.55; cursor:not-allowed; }
 
 .status{
@@ -128,12 +151,13 @@ input:focus, select:focus{
 .glossary{
   margin-top: 24px;
   background: linear-gradient(180deg, var(--panel), var(--panel2));
-  border: 1px solid rgba(255,255,255,0.10);
+  border: 1px solid rgba(0,0,0,0.28);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: clamp(16px, 3vw, 24px);
   backdrop-filter: blur(10px);
   position: relative;
+  color: rgba(255,255,255,0.92);
 }
 
 .glossary::before{
@@ -142,12 +166,12 @@ input:focus, select:focus{
   inset:0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(255,215,0,0.28), rgba(255,255,255,0.06), rgba(255,215,0,0.10));
+  background: linear-gradient(135deg, rgba(255,215,0,0.35), rgba(255,255,255,0.06), rgba(255,215,0,0.16));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events:none;
-  opacity: 0.55;
+  opacity: 0.50;
 }
 
 .glossaryHeader{
@@ -202,6 +226,7 @@ input:focus, select:focus{
   text-transform: uppercase;
   cursor: pointer;
   user-select: none;
+  transition: border-color 0.12s ease, background 0.12s ease;
 }
 
 .tab:hover{ border-color: rgba(255,215,0,0.35); }
@@ -209,6 +234,48 @@ input:focus, select:focus{
   border-color: rgba(255,215,0,0.65);
   background: rgba(255,215,0,0.10);
   color: #FFD700;
+}
+
+/* LIVE UPDATES block */
+.liveBlock{
+  margin: 10px 0 18px;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+.liveTitle{
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+  color: rgba(255,215,0,0.95);
+}
+
+.liveCopy{
+  color: rgba(255,255,255,0.72);
+  font-size: 13px;
+  line-height: 1.4;
+  margin-bottom: 10px;
+}
+
+.live-status,
+.last-refreshed{
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,215,0,0.22);
+  color: rgba(255,215,0,0.95);
+  padding: 12px;
+  border-radius: 12px;
+  margin: 10px 0;
+}
+
+/* Card wrapper used by chart/graph */
+.liveCard{
+  background: rgba(0,0,0,0.12);
+  border: 1px solid rgba(255,215,0,0.18);
+  border-radius: 12px;
+  padding: 12px;
+  margin: 10px 0;
 }
 
 /* Trading panels grid */
@@ -266,6 +333,15 @@ input:focus, select:focus{
   scrollbar-width: thin;
 }
 
+.rows::-webkit-scrollbar{ width: 10px; }
+.rows::-webkit-scrollbar-thumb{
+  background: rgba(255,215,0,0.18);
+  border-radius: 10px;
+}
+.rows::-webkit-scrollbar-track{
+  background: rgba(255,255,255,0.03);
+}
+
 /* Rows */
 .rowItem{
   display:grid;
@@ -282,6 +358,7 @@ input:focus, select:focus{
   color: rgba(255,255,255,0.55);
   white-space: nowrap;
 }
+
 .msg{
   font-size: 13px;
   line-height: 1.45;
@@ -290,7 +367,7 @@ input:focus, select:focus{
 
 /* New tick flash */
 .rowItem.isNew{
-  background: linear-gradient(90deg, var(--flashA), var(--flashB) 70%);
+  background: linear-gradient(90deg, rgba(255,215,0,0.18), rgba(255,215,0,0.00) 70%);
   outline: 1px solid rgba(255,215,0,0.20);
   animation: tickFlash 1.6s ease-out forwards;
 }
