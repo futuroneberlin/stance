@@ -439,11 +439,18 @@ form?.addEventListener("submit", async (ev) => {
   if (chapterHidden) chapterHidden.value = chapter;
   if (submitBtn) submitBtn.disabled = true;
   sending = true;
-  setStatus("Submitting…");
+  setStatus("");
+
+  // Navigate to the glossary immediately so the user is never stuck on the
+  // submit form, regardless of whether the insert succeeds or fails.
+  if (input) input.value = "";
+  updateInputMeta();
+  setHasSubmitted();
+  showGlossary().catch((err) => console.error("showGlossary on submit:", err));
 
   try {
     if (!supabase && !initSupabaseClient()) {
-      throw new Error("Supabase client not available (are you testing via file://?).");
+      throw new Error("Supabase client not available.");
     }
     // .select() is used to get the inserted row for immediate real-time-like UI feedback (supabase-js v2 CDN in index.html).
     const { error, data } = await supabase.from("entries").insert([{ text, chapter }]).select();
@@ -451,20 +458,15 @@ form?.addEventListener("submit", async (ev) => {
 
     if (Array.isArray(data) && data[0]) applyInsert(data[0]);
     setLastPostNow();
-    setHasSubmitted();
-    if (input) input.value = "";
-    updateInputMeta();
-    setStatus("");
-    // Navigate to glossary immediately; entry loading runs in the background.
-    // Errors here must not re-show the submit panel or report a "Submit failed"
-    // message when the insert itself succeeded.
-    showGlossary().catch((err) => console.error("showGlossary after submit:", err));
   } catch (err) {
     console.error("submit failed", err);
-    setStatus("Submit failed. Could not connect to live board.");
-    if (submitBtn) submitBtn.disabled = false;
+    setBoardStatus("⚠ Entry could not be saved. Please try again.");
+    setTimeout(() => {
+      if (boardStatusEl?.textContent?.startsWith("⚠")) setBoardStatus("");
+    }, 5000);
   } finally {
     sending = false;
+    if (submitBtn) submitBtn.disabled = false;
   }
 });
 
