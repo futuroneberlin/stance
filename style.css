@@ -14,6 +14,7 @@
   --shadow:0 24px 80px rgba(0,0,0,0.65);
   --flashA: rgba(152,166,255,0.20);
   --flashB: rgba(152,166,255,0.00);
+  --terminal-max-height: min(70vh, 480px);
 }
 
 *{ box-sizing:border-box; }
@@ -311,7 +312,7 @@ input:focus, select:focus{
 }
 
 .rows{
-  max-height: 480px;
+  max-height: var(--terminal-max-height);
   overflow: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.22) transparent;
@@ -366,7 +367,7 @@ input:focus, select:focus{
   overflow: hidden;
 }
 
-.single .rows{ max-height: 70vh; }
+.single .rows{ max-height: var(--terminal-max-height); }
 
 @media (max-width: 760px){
   .glossaryHeader{ align-items:flex-start; flex-direction:column; }
@@ -378,4 +379,8 @@ input:focus, select:focus{
   .cols, .rowItem{ grid-template-columns: 72px 1fr; }
   .btn{ width: 100%; }
   .row{ width: 100%; }
+}
+
+@media (max-width: 520px){
+  :root{ --terminal-max-height: min(60vh, 360px); }
 }

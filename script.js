@@ -10,6 +10,12 @@ const supabase = window.supabase?.createClient?.(SUPABASE_URL, SUPABASE_ANON_KEY
 const THROTTLE_MS = 20_000;
 const LAST_POST_KEY = "futurone:lastPostAt";
 const HAS_SUBMITTED_KEY = "futurone:hasSubmitted";
+const MAX_VISIBLE_CATEGORIES = 24; // keep market scannable while still showing broad category coverage
+const MAX_ENTRIES_MARKET_VIEW = 60;
+const MAX_ENTRIES_SINGLE_VIEW = 180;
+const MAX_CACHE_SIZE = 500;
+const BOARD_STATUS_NEW_ENTRY_PREFIX = "New entry in";
+const BOARD_STATUS_TIMEOUT_MS = 2400;
 
 const form = document.getElementById("stanceForm");
 const input = document.getElementById("inputField");
@@ -197,16 +203,20 @@ function groupByCategory(entries) {
   return map;
 }
 
+function getEntryCategoryLabel(entry) {
+  return (entry?.chapter || "general").toUpperCase();
+}
+
 function folderInsight(items) {
   const latest = items[0];
   if (!latest) return "No submissions yet.";
-  return `Latest at ${escapeHtml(formatTime(latest.created_at))} · ${Math.min(items.length, 60)} shown`;
+  return `Latest at ${escapeHtml(formatTime(latest.created_at))} · ${Math.min(items.length, MAX_ENTRIES_MARKET_VIEW)} shown`;
 }
 
 function renderTerminal(category, items, newIdsSet, isHot) {
   const rows =
     items
-      .slice(0, 60)
+      .slice(0, MAX_ENTRIES_MARKET_VIEW)
       .map((e) => rowHTML(e, newIdsSet.has(e.id)))
       .join("") ||
     `<div class="rowItem"><div class="ts">—</div><div class="msg" style="color:rgba(255,255,255,0.55)">No entries yet.</div></div>`;
@@ -239,7 +249,7 @@ function renderMarket(entries) {
     }
   }
 
-  const catsToShow = orderedCats.slice(0, 24);
+  const catsToShow = orderedCats.slice(0, MAX_VISIBLE_CATEGORIES);
   marketEl.innerHTML = catsToShow
     .map((c) => {
       const items = byCat.get(c) || [];
@@ -261,7 +271,7 @@ function renderSingle(entries, category) {
     <div class="rows">
       ${
         filtered
-          .slice(0, 180)
+          .slice(0, MAX_ENTRIES_SINGLE_VIEW)
           .map((e) => rowHTML(e, newIds.has(e.id)))
           .join("") ||
         `<div class="rowItem"><div class="ts">—</div><div class="msg" style="color:rgba(255,255,255,0.55)">No entries yet.</div></div>`
@@ -311,12 +321,16 @@ function updateView(entries) {
 
 function applyInsert(newRow) {
   if (!newRow || latestCache.some((e) => e.id === newRow.id)) return;
-  latestCache = [newRow, ...latestCache].slice(0, 500);
-  setBoardStatus(`New entry in ${(newRow.chapter || "general").toUpperCase()}`);
+  latestCache = [newRow, ...latestCache].slice(0, MAX_CACHE_SIZE);
+  setBoardStatus(`${BOARD_STATUS_NEW_ENTRY_PREFIX} ${getEntryCategoryLabel(newRow)}`);
   updateView(latestCache);
   setTimeout(() => {
-    if (boardStatusEl?.textContent?.startsWith("New entry")) setBoardStatus("");
-  }, 2400);
+    if (boardStatusEl?.textContent?.startsWith(BOARD_STATUS_NEW_ENTRY_PREFIX)) setBoardStatus("");
+  }, BOARD_STATUS_TIMEOUT_MS);
+}
+
+function handleRealtimeInsert(payload) {
+  applyInsert(payload?.new);
 }
 
 function startRealtime() {
@@ -326,20 +340,18 @@ function startRealtime() {
     if (typeof supabase.channel === "function") {
       realtimeSub = supabase
         .channel("public:entries")
-        .on("postgres_changes", { event: "INSERT", schema: "public", table: "entries" }, (payload) => {
-          applyInsert(payload.new);
-        })
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "entries" }, handleRealtimeInsert)
         .subscribe();
       return;
     }
 
-    if (typeof supabase.from === "function" && typeof supabase.from("entries").on === "function") {
-      realtimeSub = supabase
-        .from("entries")
-        .on("INSERT", (payload) => {
-          applyInsert(payload.new);
-        })
+    if (typeof supabase.from === "function") {
+      const entriesRef = supabase.from("entries");
+      if (typeof entriesRef.on === "function") {
+        realtimeSub = entriesRef
+        .on("INSERT", handleRealtimeInsert)
         .subscribe();
+      }
     }
   } catch (err) {
     console.error("Realtime failed:", err);
@@ -406,6 +418,7 @@ form?.addEventListener("submit", async (ev) => {
 
   try {
     if (!supabase) throw new Error("Supabase client not available (are you testing via file://?).");
+    // .select() is used to get the inserted row for immediate real-time-like UI feedback (supabase-js v2 CDN in index.html).
     const { error, data } = await supabase.from("entries").insert([{ text, chapter }]).select();
     if (error) throw error;
 
