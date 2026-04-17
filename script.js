@@ -1,27 +1,59 @@
-async function init() {
-    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Supabase did not load in time')), 5000));
-    const supabaseReady = () => new Promise((resolve) => {
-        const checkSupabase = setInterval(() => {
-            if (window.supabase) {
-                clearInterval(checkSupabase);
-                resolve(window.supabase);
+document.addEventListener('DOMContentLoaded', function() {
+    const stanceForm = document.getElementById('stanceForm');
+    const submitPanel = document.getElementById('submitPanel');
+    const glossaryPanel = document.getElementById('glossaryPanel');
+    const entriesList = document.getElementById('entriesList');
+
+    stanceForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const formData = new FormData(stanceForm);
+        const entry = formData.get('entry');
+
+        // Parse category from input
+        const categoryMatch = entry.match(/^(?<category>\S+): (?<text>.+)$/) || entry.match(/^(?:#|)(?<category>\S+) (?<text>.+)$/);
+
+        if (categoryMatch && categoryMatch.groups) {
+            const category = categoryMatch.groups.category;
+            const text = categoryMatch.groups.text;
+
+            // Store entry in localStorage
+            let artEntries = JSON.parse(localStorage.getItem('artEntries')) || {};
+            if (!artEntries[category]) {
+                artEntries[category] = [];
             }
-        }, 100);
+            artEntries[category].push(text);
+            localStorage.setItem('artEntries', JSON.stringify(artEntries));
+
+            // Update glossary display
+            displayGlossary();
+
+            // Hide submit panel and show glossary panel
+            submitPanel.style.display = 'none';
+            glossaryPanel.style.display = 'block';
+        } else {
+            console.error('Invalid input format. Please use "category: text" or "#category text".');
+        }
     });
 
-    try {
-        await Promise.race([supabaseReady(), timeout]);
-        // Show loading status to user
-        document.body.innerHTML += '<p>Loading Supabase...</p>';
+    function displayGlossary() {
+        entriesList.innerHTML = ''; // Clear previous entries
+        let artEntries = JSON.parse(localStorage.getItem('artEntries')) || {};
+        for (const category in artEntries) {
+            const categoryPanel = document.createElement('div');
+            categoryPanel.className = 'category-panel';
+            const header = document.createElement('h3');
+            header.innerText = category;
+            categoryPanel.appendChild(header);
 
-        // Initialize Supabase client
-        const supabase = window.supabase;
-        // Existing logic here, e.g., form submission, polling, glossary, etc.
-
-    } catch (error) {
-        console.error(error);
-        document.body.innerHTML += '<p>Error loading Supabase: ' + error.message + '</p>';
+            artEntries[category].forEach(entry => {
+                const entryItem = document.createElement('div');
+                entryItem.innerText = entry;
+                categoryPanel.appendChild(entryItem);
+            });
+            entriesList.appendChild(categoryPanel);
+        }
     }
-}
 
-init();
+    // Poll every 4 seconds for updates
+    setInterval(displayGlossary, 4000);
+});
