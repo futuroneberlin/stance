@@ -10,6 +10,11 @@ const HUB_NODE_ID = "hub:art";
 const MIN_GRAPH_HEIGHT = 460;
 const MAX_GRAPH_HEIGHT = 700;
 const GRAPH_HEIGHT_VIEWPORT_RATIO = 0.68;
+const HUB_NODE_RADIUS = 9;
+const DEFAULT_NODE_RADIUS = 6.3;
+const DEFAULT_NODE_STROKE_WIDTH = 1.1;
+const FOCUSED_NODE_STROKE_WIDTH = 2.2;
+const LINK_STROKE_COLOR = "rgba(255,215,0,0.35)";
 const HTML_ESCAPE_MAP = {
   "&": "&amp;",
   "<": "&lt;",
@@ -344,7 +349,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const link = svg
       .append("g")
-      .attr("stroke", "rgba(255,215,0,0.35)")
+      .attr("stroke", LINK_STROKE_COLOR)
       .selectAll("line")
       .data(links)
       .join("line")
@@ -355,10 +360,10 @@ document.addEventListener("DOMContentLoaded", () => {
       .selectAll("circle")
       .data(nodes)
       .join("circle")
-      .attr("r", (d) => (d.id === HUB_NODE_ID ? 9 : 6.3))
+      .attr("r", (d) => (d.id === HUB_NODE_ID ? HUB_NODE_RADIUS : DEFAULT_NODE_RADIUS))
       .attr("fill", (d) => colorBySource(d.source))
       .attr("stroke", "rgba(0,0,0,0.92)")
-      .attr("stroke-width", 1.1)
+      .attr("stroke-width", DEFAULT_NODE_STROKE_WIDTH)
       .call(
         d3
           .drag()
@@ -419,11 +424,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       node
         .attr("cx", (d) => {
-          d.x = clamp(d.x || width / 2, NODE_BOUNDARY_PADDING, width - NODE_BOUNDARY_PADDING);
+          d.x = clamp(d.x ?? width / 2, NODE_BOUNDARY_PADDING, width - NODE_BOUNDARY_PADDING);
           return d.x;
         })
         .attr("cy", (d) => {
-          d.y = clamp(d.y || height / 2, NODE_BOUNDARY_PADDING, height - NODE_BOUNDARY_PADDING);
+          d.y = clamp(d.y ?? height / 2, NODE_BOUNDARY_PADDING, height - NODE_BOUNDARY_PADDING);
           return d.y;
         });
 
@@ -453,7 +458,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const focusId = state.focusedNodeId;
     if (!focusId) {
-      graph.node.attr("opacity", 1).attr("stroke-width", 1.1);
+      graph.node.attr("opacity", 1).attr("stroke-width", DEFAULT_NODE_STROKE_WIDTH);
       graph.label.attr("opacity", 1);
       graph.link.attr("opacity", 0.8);
       return;
@@ -469,7 +474,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     graph.node
       .attr("opacity", (d) => (connected.has(d.id) ? 1 : 0.2))
-      .attr("stroke-width", (d) => (d.id === focusId ? 2.2 : 1.1));
+      .attr("stroke-width", (d) => (d.id === focusId ? FOCUSED_NODE_STROKE_WIDTH : DEFAULT_NODE_STROKE_WIDTH));
 
     graph.label.attr("opacity", (d) => (connected.has(d.id) ? 1 : 0.2));
 
