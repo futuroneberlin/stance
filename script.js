@@ -60,11 +60,11 @@ function escapeHtml(str = "") {
     .replaceAll("'", "&#039;");
 }
 
-function getSupabaseClientOrThrow(action = "Action"){
+function requireSupabaseClient(action = "Action"){
   if (supabase) return supabase;
   const isFileProtocol = window.location?.protocol === "file:";
   const hint = isFileProtocol
-    ? "Open the app through a local server (http://localhost), not file://."
+    ? "Open the app through a local web server (for example http://localhost), not file://."
     : "Make sure the Supabase script is loaded before script.js.";
   throw new Error(`${action} failed: Supabase client is unavailable. ${hint}`);
 }
@@ -90,7 +90,7 @@ function writeCachedEntries(entries){
 }
 
 function setGlossaryNotice(msg = ""){
-  glossaryNotice = msg || "";
+  glossaryNotice = msg;
 }
 
 function noticeHTML(){
@@ -161,7 +161,7 @@ function startThrottleUI(){
 
 /* Supabase fetch */
 async function fetchEntries(){
-  const client = getSupabaseClientOrThrow("Load glossary");
+  const client = requireSupabaseClient("Load glossary");
   const { data, error } = await client
     .from("entries")
     .select("id, text, chapter, created_at")
@@ -286,7 +286,7 @@ function startPolling(){
     } catch(e){
       console.error("poll error", e);
       if (latestCache.length){
-        setGlossaryNotice("Offline: showing cached entries. Retrying automatically…");
+        setGlossaryNotice("Offline: showing cached entries. Retrying automatically...");
         updateView(latestCache);
       }
     }
@@ -308,23 +308,23 @@ async function refreshGlossary(){
   }
 }
 
-async function showGlossary({ afterSubmit = false } = {}){
+async function showGlossary({ afterSubmission = false } = {}){
   showGlossaryPanel();
   if (!latestCache.length){
     latestCache = readCachedEntries();
     lastSeenIds = new Set(latestCache.map(e=>e.id));
   }
   if (latestCache.length){
-    setGlossaryNotice("Showing cached entries while syncing…");
+    setGlossaryNotice("Showing cached entries while syncing...");
   } else {
-    setGlossaryNotice(afterSubmit ? "Submitted. Loading glossary…" : "Loading glossary…");
+    setGlossaryNotice(afterSubmission ? "Submitted. Loading glossary..." : "Loading glossary...");
   }
   updateView(latestCache);
   startPolling();
 
   const loaded = await refreshGlossary();
   if (!loaded){
-    if (afterSubmit){
+    if (afterSubmission){
       setGlossaryNotice(
         latestCache.length
           ? "Submitted. Offline right now — showing cached entries."
@@ -333,7 +333,7 @@ async function showGlossary({ afterSubmit = false } = {}){
     } else {
       setGlossaryNotice(
         latestCache.length
-          ? "Offline: showing cached entries. Retrying automatically…"
+          ? "Offline: showing cached entries. Retrying automatically..."
           : "Could not load glossary. Check your connection and try again."
       );
     }
@@ -356,20 +356,20 @@ form.addEventListener("submit", async (ev)=>{
   chapterHidden.value = chapter;
   submitBtn.disabled = true;
   sending = true;
-  setStatus("Submitting…");
+  setStatus("Submitting...");
   try{
-    const client = getSupabaseClientOrThrow("Submit");
+    const client = requireSupabaseClient("Submit");
     const { error } = await client.from("entries").insert([{ text, chapter }]);
     if (error) throw error;
     setLastPostNow();
     setHasSubmitted();
     input.value = "";
-    setStatus("Submitted. Opening glossary…");
-    await showGlossary({ afterSubmit: true });
+    setStatus("Submitted. Loading glossary...");
+    await showGlossary({ afterSubmission: true });
     setStatus("");
   } catch(err){
     console.error("submit failed", err);
-    setStatus(err?.message || "Submit failed. Please try again.");
+    setStatus(err?.message || "Submit failed. Check your connection and try again.");
     submitBtn.disabled = false;
   } finally {
     sending = false;
