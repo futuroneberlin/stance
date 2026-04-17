@@ -5,14 +5,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const inputField = document.getElementById('inputField');
     const market = document.getElementById('market');
 
-    // Handle form submission
     stanceForm.addEventListener('submit', function(event) {
         event.preventDefault();
         const entry = inputField.value.trim();
 
         if (!entry) return;
 
-        // Parse category: "design: text" or "#design text"
         const categoryMatch = entry.match(/^(?<category>\S+):\s*(?<text>.+)$/) || 
                             entry.match(/^#(?<category>\S+)\s+(?<text>.+)$/);
 
@@ -20,7 +18,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const category = categoryMatch.groups.category;
             const text = categoryMatch.groups.text;
 
-            // Store in localStorage
             let artEntries = JSON.parse(localStorage.getItem('artEntries')) || {};
             if (!artEntries[category]) {
                 artEntries[category] = [];
@@ -28,10 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
             artEntries[category].push({text, timestamp: new Date().toLocaleTimeString()});
             localStorage.setItem('artEntries', JSON.stringify(artEntries));
 
-            // Clear input
             inputField.value = '';
-
-            // Switch to glossary
             submitPanel.classList.add('isHidden');
             glossaryPanel.classList.remove('isHidden');
             displayGlossary();
@@ -48,10 +42,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const termHead = document.createElement('div');
             termHead.className = 'termHead';
-            termHead.innerHTML = `
-                <span class="ch">${category}</span>
-                <span class="count">${artEntries[category].length} entries</span>
-            `;
+            termHead.innerHTML = `<span class="ch">${category}</span><span class="count">${artEntries[category].length}</span>`;
             term.appendChild(termHead);
 
             const cols = document.createElement('div');
@@ -65,13 +56,8 @@ document.addEventListener('DOMContentLoaded', function() {
             artEntries[category].forEach((entry, index) => {
                 const rowItem = document.createElement('div');
                 rowItem.className = 'rowItem';
-                if (index === artEntries[category].length - 1) {
-                    rowItem.classList.add('isNew');
-                }
-                rowItem.innerHTML = `
-                    <div class="ts">${entry.timestamp}</div>
-                    <div class="msg">${entry.text}</div>
-                `;
+                if (index === artEntries[category].length - 1) rowItem.classList.add('isNew');
+                rowItem.innerHTML = `<div class="ts">${entry.timestamp}</div><div class="msg">${entry.text}</div>`;
                 rows.appendChild(rowItem);
             });
             
@@ -80,6 +66,5 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Poll every 4 seconds
     setInterval(displayGlossary, 4000);
 });
