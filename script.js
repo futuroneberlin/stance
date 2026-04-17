@@ -25,7 +25,7 @@ async function waitForSupabaseClient(timeoutMs = 1500) {
     if (client) return client;
     await new Promise(r => setTimeout(r, 50));
   }
-  return getSupabaseClient();
+  return null;
 }
 
 const THROTTLE_MS = 20_000;
@@ -106,17 +106,20 @@ function setStatus(msg){
   if (!statusEl) return;
   statusEl.textContent = msg || "";
 }
+let glossaryNoticeEl = null;
 function setGlossaryNotice(msg){
-  let noticeEl = document.getElementById("glossaryNotice");
-  if (!noticeEl){
-    noticeEl = document.createElement("p");
-    noticeEl.id = "glossaryNotice";
-    noticeEl.className = "status";
-    noticeEl.style.margin = "10px 0 0";
-    glossaryPanel.prepend(noticeEl);
+  if (!glossaryNoticeEl){
+    glossaryNoticeEl = document.getElementById("glossaryNotice");
   }
-  noticeEl.textContent = msg || "";
-  noticeEl.classList.toggle("isHidden", !msg);
+  if (!glossaryNoticeEl){
+    glossaryNoticeEl = document.createElement("p");
+    glossaryNoticeEl.id = "glossaryNotice";
+    glossaryNoticeEl.className = "status";
+    glossaryNoticeEl.style.margin = "10px 0 0";
+    glossaryPanel.prepend(glossaryNoticeEl);
+  }
+  glossaryNoticeEl.textContent = msg || "";
+  glossaryNoticeEl.classList.toggle("isHidden", !msg);
 }
 function canPostNow() {
   const last = Number(localStorage.getItem(LAST_POST_KEY) || "0");
