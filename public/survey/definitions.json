@@ -1,0 +1,66 @@
+[
+  {
+    "id": "seed-1",
+    "source": "seed",
+    "title": "Conceptual Art",
+    "definition": "Art where ideas and process outweigh material form.",
+    "importance": 12,
+    "category": "theory"
+  },
+  {
+    "id": "seed-2",
+    "source": "seed",
+    "title": "Performance Art",
+    "definition": "Live actions as artistic medium with social and political meaning.",
+    "importance": 10,
+    "category": "medium"
+  },
+  {
+    "id": "seed-3",
+    "source": "seed",
+    "title": "Installation Art",
+    "definition": "Site-specific spatial environments activating audience participation.",
+    "importance": 9,
+    "category": "medium"
+  },
+  {
+    "id": "seed-4",
+    "source": "seed",
+    "title": "Relational Aesthetics",
+    "definition": "Art theory focused on inter-human relations and social exchanges.",
+    "importance": 8,
+    "category": "theory"
+  },
+  {
+    "id": "seed-5",
+    "source": "seed",
+    "title": "Institutional Critique",
+    "definition": "Practices examining museums, power, funding and cultural structures.",
+    "importance": 8,
+    "category": "institution"
+  },
+  {
+    "id": "seed-6",
+    "source": "seed",
+    "title": "Social Practice",
+    "definition": "Collaborative community-based art with civic goals.",
+    "importance": 10,
+    "category": "movement"
+  },
+  {
+    "id": "seed-7",
+    "source": "seed",
+    "title": "Participatory Art",
+    "definition": "Projects where audiences co-create the artwork.",
+    "importance": 11,
+    "category": "movement"
+  },
+  {
+    "id": "seed-8",
+    "source": "seed",
+    "title": "Archive as Practice",
+    "definition": "Artistic use of records, memory and documentation systems.",
+    "importance": 7,
+    "category": "concept"
+  }
+]

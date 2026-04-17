@@ -1,0 +1,10 @@
+[
+  { "source": "seed-1", "target": "seed-4", "weight": 6, "sharedTerms": ["theory", "social", "relations"] },
+  { "source": "seed-1", "target": "seed-5", "weight": 5, "sharedTerms": ["institutions", "power"] },
+  { "source": "seed-2", "target": "seed-3", "weight": 4, "sharedTerms": ["medium", "audience"] },
+  { "source": "seed-2", "target": "seed-7", "weight": 7, "sharedTerms": ["participation", "live"] },
+  { "source": "seed-3", "target": "seed-7", "weight": 5, "sharedTerms": ["space", "co-create"] },
+  { "source": "seed-4", "target": "seed-6", "weight": 6, "sharedTerms": ["social", "community"] },
+  { "source": "seed-5", "target": "seed-8", "weight": 3, "sharedTerms": ["archive", "institutions"] },
+  { "source": "seed-6", "target": "seed-7", "weight": 8, "sharedTerms": ["community", "collaborative"] }
+]

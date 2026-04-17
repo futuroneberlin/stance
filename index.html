@@ -35,6 +35,8 @@
 
         <p id="status" class="status" aria-live="polite"></p>
       </form>
+
+      <button id="exploreBtn" class="exploreBtn" type="button">Explore Art Updates →</button>
     </section>
 
     <!-- GLOSSARY SCREEN -->
@@ -43,20 +45,40 @@
         <div class="left">
           <img class="logo" src="logo.png" alt="Futur One" />
           <div class="hint">LIVE</div>
+          <button id="addEntryBtn" class="miniBtn addEntryBtn" type="button">+ Add Entry</button>
         </div>
 
         <div class="controls">
           <div id="tabs" class="tabs" aria-label="Categories"></div>
+          <div class="crawlerMeta">
+            <span id="crawlerStatus" class="crawlerStatus">Crawler idle</span>
+            <button id="crawlNowBtn" class="miniBtn" type="button">Refresh Crawl</button>
+          </div>
+          <div class="progressTrack" aria-hidden="true"><span id="crawlProgressBar" class="progressBar"></span></div>
+          <div id="lastUpdate" class="lastUpdate">Last update: never</div>
         </div>
       </header>
 
       <div id="market" class="market"></div>
+
+      <section id="networkPanel" class="networkPanel isHidden" aria-label="Network graph">
+        <div class="stats" id="networkStats"></div>
+        <div class="graphWrap">
+          <svg id="networkGraph" class="networkGraph" role="img" aria-label="Concept network graph"></svg>
+        </div>
+        <div class="trendBox">
+          <div class="trendTitle">Trending Relationships</div>
+          <ul id="trendingList" class="trendingList"></ul>
+        </div>
+      </section>
+
       <div id="single" class="single isHidden"></div>
     </section>
   </main>
 
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
--->
+  <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
+  <script src="crawler.js"></script>
+  <script src="network.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
