@@ -4,6 +4,8 @@ const HISTORY_KEY = "liveHistory";
 const ENTRIES_KEY = "artEntries";
 const MAX_TRENDING = 8;
 const DEFAULT_NODE_LIMIT = 36;
+const NODE_BOUNDARY_PADDING = 12;
+const RESIZE_DEBOUNCE_MS = 180;
 
 document.addEventListener("DOMContentLoaded", () => {
   const stanceForm = document.getElementById("stanceForm");
@@ -195,7 +197,8 @@ document.addEventListener("DOMContentLoaded", () => {
       .filter((node) => node.id !== "hub:art")
       .sort((a, b) => (degree.get(b.id) || 0) - (degree.get(a.id) || 0));
 
-    const selectedIds = new Set(["hub:art", ...sortedNodes.slice(0, DEFAULT_NODE_LIMIT).map((node) => node.id)]);
+    const selectedIds = new Set(["hub:art"]);
+    sortedNodes.slice(0, DEFAULT_NODE_LIMIT).forEach((node) => selectedIds.add(node.id));
 
     const filteredNodes = nodes.filter((node) => selectedIds.has(node.id));
     const filteredLinks = links.filter((link) => {
@@ -224,7 +227,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const points = history.map((d) => ({
       x: d.t,
-      y: Number(d.wikipedia || 0) + Number(d.wikidata || 0) + Number(d.met || 0),
+      y: getTotalSources(d),
     }));
 
     const minX = Math.min(...points.map((p) => p.x));
@@ -404,8 +407,8 @@ document.addEventListener("DOMContentLoaded", () => {
         .attr("y2", (d) => d.target.y);
 
       node
-        .attr("cx", (d) => (d.x = clamp(d.x || width / 2, 12, width - 12)))
-        .attr("cy", (d) => (d.y = clamp(d.y || height / 2, 12, height - 12)));
+        .attr("cx", (d) => (d.x = clamp(d.x || width / 2, NODE_BOUNDARY_PADDING, width - NODE_BOUNDARY_PADDING)))
+        .attr("cy", (d) => (d.y = clamp(d.y || height / 2, NODE_BOUNDARY_PADDING, height - NODE_BOUNDARY_PADDING)));
 
       label
         .attr("x", (d) => d.x + 10)
@@ -458,6 +461,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const targetId = typeof d.target === "object" ? d.target.id : d.target;
       return sourceId === focusId || targetId === focusId ? 1 : 0.1;
     });
+  }
+
+  function getTotalSources(datum) {
+    return Number(datum?.wikipedia || 0) + Number(datum?.wikidata || 0) + Number(datum?.met || 0);
+  }
+
+  function debounce(fn, waitMs) {
+    let timeoutId;
+    return (...args) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => fn(...args), waitMs);
+    };
   }
 
   function escapeHtml(raw) {
@@ -542,9 +557,9 @@ document.addEventListener("DOMContentLoaded", () => {
     focusNode(button.dataset.focusId);
   });
 
-  window.addEventListener("resize", () => {
+  window.addEventListener("resize", debounce(() => {
     renderLiveViews(Boolean(showAllNodesToggle?.checked));
-  });
+  }, RESIZE_DEBOUNCE_MS));
 
   renderRecentEntries();
   renderSourceCounts({ wikipedia: 0, wikidata: 0, met: 0 });

@@ -8,6 +8,8 @@
   --muted: rgba(255, 255, 255, 0.72);
   --muted2: rgba(255, 255, 255, 0.52);
   --radius: 16px;
+  --left-panel-min-width: 320px;
+  --left-panel-max-width: 380px;
 }
 
 * { box-sizing: border-box; }
@@ -28,7 +30,7 @@ body {
 
 .splitLayout {
   display: grid;
-  grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
+  grid-template-columns: minmax(var(--left-panel-min-width), var(--left-panel-max-width)) minmax(0, 1fr);
   gap: 16px;
   align-items: start;
 }
