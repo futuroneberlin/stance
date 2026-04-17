@@ -4,9 +4,29 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 if (!window.supabase) {
   console.error("Supabase client library not loaded.");
-} 
-
-const supabase = window.supabase?.createClient?.(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+let supabaseClient = null;
+function getSupabaseClient() {
+  if (supabaseClient) return supabaseClient;
+  const createClient = window.supabase?.createClient;
+  if (typeof createClient !== "function") return null;
+  try {
+    supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    return supabaseClient;
+  } catch (err) {
+    console.error("Supabase client init failed.", err);
+    return null;
+  }
+}
+async function waitForSupabaseClient(timeoutMs = 1500) {
+  const start = Date.now();
+  while ((Date.now() - start) < timeoutMs) {
+    const client = getSupabaseClient();
+    if (client) return client;
+    await new Promise(r => setTimeout(r, 50));
+  }
+  return getSupabaseClient();
+}
 
 const THROTTLE_MS = 20_000;
 const LAST_POST_KEY = "futurone:lastPostAt";
@@ -86,6 +106,18 @@ function setStatus(msg){
   if (!statusEl) return;
   statusEl.textContent = msg || "";
 }
+function setGlossaryNotice(msg){
+  let noticeEl = document.getElementById("glossaryNotice");
+  if (!noticeEl){
+    noticeEl = document.createElement("p");
+    noticeEl.id = "glossaryNotice";
+    noticeEl.className = "status";
+    noticeEl.style.margin = "10px 0 0";
+    glossaryPanel.prepend(noticeEl);
+  }
+  noticeEl.textContent = msg || "";
+  noticeEl.classList.toggle("isHidden", !msg);
+}
 function canPostNow() {
   const last = Number(localStorage.getItem(LAST_POST_KEY) || "0");
   return (Date.now() - last) >= THROTTLE_MS;
@@ -115,8 +147,9 @@ function startThrottleUI(){
 
 /* Supabase fetch */
 async function fetchEntries(){
-  if (!supabase) throw new Error("Supabase client missing.");
-  const { data, error } = await supabase
+  const client = await waitForSupabaseClient();
+  if (!client) throw new Error("Supabase client missing.");
+  const { data, error } = await client
     .from("entries")
     .select("id, text, chapter, created_at")
     .order("created_at", { ascending: false })
@@ -242,18 +275,24 @@ function startPolling(){
 
 /* show/hide glossary */
 async function showGlossary(){
+  showGlossaryPanel();
   try{
-    showGlossaryPanel();
     latestCache = await fetchEntries();
     lastSeenIds = new Set(latestCache.map(e=>e.id));
     updateView(latestCache);
-    startPolling();
+    setStatus("");
+    setGlossaryNotice("");
   } catch(err){
     console.error("showGlossary error", err);
-    setStatus("Could not load glossary. Try reloading.");
-    // fallback: show submit panel so user can still post
-    showSubmitPanel();
+    if (latestCache.length) {
+      updateView(latestCache);
+      setGlossaryNotice("Could not refresh glossary. Showing cached entries.");
+    } else {
+      updateView([]);
+      setGlossaryNotice("Could not load glossary yet. Retrying in background…");
+    }
   }
+  startPolling();
 }
 
 /* submit handler */
@@ -273,8 +312,9 @@ form.addEventListener("submit", async (ev)=>{
   sending = true;
   setStatus("Submitting…");
   try{
-    if (!supabase) throw new Error("Supabase client not available (are you testing via file://?).");
-    const { error } = await supabase.from("entries").insert([{ text, chapter }]);
+    const client = await waitForSupabaseClient(3000);
+    if (!client) throw new Error("Supabase client not available (are you testing via file://?).");
+    const { error } = await client.from("entries").insert([{ text, chapter }]);
     if (error) throw error;
     setLastPostNow();
     setHasSubmitted();
@@ -298,7 +338,7 @@ if (hasSubmittedBefore()){
   // try to open glossary automatically
   showGlossary().catch(e=>{
     console.error(e);
-    showSubmitPanel();
-    setStatus("Could not load glossary. You can still submit an entry.");
+    showGlossaryPanel();
+    setStatus("Could not load glossary yet. Retrying in background…");
   });
 }
