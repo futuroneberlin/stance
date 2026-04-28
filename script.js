@@ -5,82 +5,225 @@
 // - chart + network graph (D3)
 
 const REFRESH_INTERVAL_MS = 7 * 60 * 60 * 1000;
+const MAX_CATEGORIES = 7;
 
 document.addEventListener("DOMContentLoaded", () => {
   const stanceForm = document.getElementById("stanceForm");
   const submitPanel = document.getElementById("submitPanel");
   const glossaryPanel = document.getElementById("glossaryPanel");
   const inputField = document.getElementById("inputField");
+  const categorySelect = document.getElementById("categorySelect");
+  const newCategoryInput = document.getElementById("newCategoryInput");
+  const statusEl = document.getElementById("status");
   const market = document.getElementById("market");
 
   const liveStatus = document.getElementById("liveStatus");
   const lastRefreshed = document.getElementById("lastRefreshed");
   const networkContainer = document.getElementById("networkContainer");
 
+  // -------- DATA HELPERS --------
+
+  function getStoredEntries() {
+    return JSON.parse(localStorage.getItem("artEntries") || "{}");
+  }
+
+  function getCategories() {
+    return Object.keys(getStoredEntries());
+  }
+
+  // Migrate old entries that lack a numeric `ts` field
+  function migrateEntries() {
+    const artEntries = getStoredEntries();
+    let changed = false;
+    for (const cat of Object.keys(artEntries)) {
+      if (!Array.isArray(artEntries[cat])) continue;
+      for (let i = 0; i < artEntries[cat].length; i++) {
+        if (typeof artEntries[cat][i].ts === "undefined") {
+          artEntries[cat][i].ts = 0; // old entries sort to bottom
+          changed = true;
+        }
+      }
+    }
+    if (changed) localStorage.setItem("artEntries", JSON.stringify(artEntries));
+  }
+
+  function saveEntry(text, category) {
+    const artEntries = getStoredEntries();
+    if (!artEntries[category]) artEntries[category] = [];
+    const now = new Date();
+    artEntries[category].push({
+      text,
+      timestamp: now.toLocaleString(undefined, {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      ts: now.getTime(),
+    });
+    localStorage.setItem("artEntries", JSON.stringify(artEntries));
+  }
+
+  // -------- CATEGORY DROPDOWN --------
+
+  function populateCategoryDropdown() {
+    if (!categorySelect) return;
+    const categories = getCategories();
+    const prevValue = categorySelect.value;
+
+    categorySelect.innerHTML = "";
+
+    if (categories.length === 0) {
+      // No categories yet — only option is to create one
+      const opt = document.createElement("option");
+      opt.value = "__new__";
+      opt.textContent = "+ New category…";
+      categorySelect.appendChild(opt);
+    } else {
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.disabled = true;
+      placeholder.selected = true;
+      placeholder.textContent = "Select a category…";
+      categorySelect.appendChild(placeholder);
+
+      categories.forEach((cat) => {
+        const opt = document.createElement("option");
+        opt.value = cat;
+        opt.textContent = cat;
+        if (cat === prevValue) opt.selected = true;
+        categorySelect.appendChild(opt);
+      });
+
+      if (categories.length < MAX_CATEGORIES) {
+        const newOpt = document.createElement("option");
+        newOpt.value = "__new__";
+        newOpt.textContent = "+ New category…";
+        categorySelect.appendChild(newOpt);
+      }
+    }
+
+    // Show/hide the new-category text input based on current selection
+    toggleNewCategoryInput();
+  }
+
+  function toggleNewCategoryInput() {
+    if (!categorySelect || !newCategoryInput) return;
+    if (categorySelect.value === "__new__") {
+      newCategoryInput.classList.remove("isHidden");
+    } else {
+      newCategoryInput.classList.add("isHidden");
+      newCategoryInput.value = "";
+    }
+  }
+
+  categorySelect?.addEventListener("change", () => {
+    toggleNewCategoryInput();
+    if (categorySelect.value === "__new__") {
+      newCategoryInput?.focus();
+    }
+  });
+
+  // -------- SCREENS --------
+
   function showGlossary() {
     if (submitPanel) submitPanel.classList.add("isHidden");
     if (glossaryPanel) glossaryPanel.classList.remove("isHidden");
   }
 
-  function saveEntryToLocalStorage(raw) {
-    const entryRaw = (raw || "").trim();
-    if (!entryRaw) return;
-
-    // allow "category: text" or "#category text" OR plain text -> general
-    const categoryMatch =
-      entryRaw.match(/^(?<category>\S+):\s*(?<text>.+)$/) ||
-      entryRaw.match(/^#(?<category>\S+)\s+(?<text>.+)$/);
-
-    const category =
-      categoryMatch && categoryMatch.groups && categoryMatch.groups.category
-        ? categoryMatch.groups.category
-        : "general";
-
-    const text =
-      categoryMatch && categoryMatch.groups && categoryMatch.groups.text
-        ? categoryMatch.groups.text
-        : entryRaw;
-
-    const artEntries = JSON.parse(localStorage.getItem("artEntries") || "{}");
-    if (!artEntries[category]) artEntries[category] = [];
-    artEntries[category].push({ text, timestamp: new Date().toLocaleTimeString() });
-    localStorage.setItem("artEntries", JSON.stringify(artEntries));
-  }
+  // -------- ACCORDION ARCHIVE --------
 
   function displayGlossary() {
     if (!market) return;
 
+    migrateEntries();
+    const artEntries = getStoredEntries();
+    const allCategories = Object.keys(artEntries);
+
     market.innerHTML = "";
-    const artEntries = JSON.parse(localStorage.getItem("artEntries") || "{}");
 
-    for (const category in artEntries) {
-      const term = document.createElement("div");
-      term.className = "term";
+    if (allCategories.length === 0) {
+      market.innerHTML = `<p class="emptyState">No entries yet — submit your first one above.</p>`;
+      return;
+    }
 
-      const termHead = document.createElement("div");
-      termHead.className = "termHead";
-      termHead.innerHTML = `<span class="ch">${category}</span><span class="count">${artEntries[category].length}</span>`;
-      term.appendChild(termHead);
+    // Sort categories by most-recent entry timestamp (newest category first)
+    allCategories.sort((a, b) => {
+      const latestA = Math.max(...artEntries[a].map((e) => e.ts || 0));
+      const latestB = Math.max(...artEntries[b].map((e) => e.ts || 0));
+      return latestB - latestA;
+    });
 
-      const cols = document.createElement("div");
-      cols.className = "cols";
-      cols.innerHTML = `<div>Time</div><div>Entry</div>`;
-      term.appendChild(cols);
+    const accordion = document.createElement("div");
+    accordion.className = "accordion";
 
-      const rows = document.createElement("div");
-      rows.className = "rows";
+    allCategories.forEach((category, catIndex) => {
+      const entryList = [...artEntries[category]].sort(
+        (a, b) => (b.ts || 0) - (a.ts || 0)
+      );
+      // After sort, index 0 is always the most recent entry
 
-      artEntries[category].forEach((entry, index) => {
-        const rowItem = document.createElement("div");
-        rowItem.className = "rowItem";
-        if (index === artEntries[category].length - 1) rowItem.classList.add("isNew");
-        rowItem.innerHTML = `<div class="ts">${entry.timestamp}</div><div class="msg">${entry.text}</div>`;
-        rows.appendChild(rowItem);
+      const item = document.createElement("div");
+      item.className = "accordionItem";
+
+      const head = document.createElement("button");
+      head.type = "button";
+      head.className = "accordionHead";
+      head.setAttribute("aria-expanded", catIndex === 0 ? "true" : "false");
+      head.innerHTML = `
+        <span class="catName">${escapeHtml(category)}</span>
+        <span class="catMeta">
+          <span class="catCount">${entryList.length} ${entryList.length === 1 ? "entry" : "entries"}</span>
+          <span class="chevron" aria-hidden="true">${catIndex === 0 ? "▼" : "▶"}</span>
+        </span>
+      `;
+
+      const body = document.createElement("div");
+      body.className = "accordionBody";
+      if (catIndex !== 0) body.setAttribute("hidden", "");
+
+      entryList.forEach((entry, i) => {
+        const row = document.createElement("div");
+        row.className = "entryItem";
+        if (i === 0) row.classList.add("isNew");
+        row.innerHTML = `
+          <div class="entryDate">${escapeHtml(entry.timestamp)}</div>
+          <div class="entryText">${escapeHtml(entry.text)}</div>
+        `;
+        body.appendChild(row);
       });
 
-      term.appendChild(rows);
-      market.appendChild(term);
-    }
+      head.addEventListener("click", () => {
+        const isOpen = head.getAttribute("aria-expanded") === "true";
+        if (isOpen) {
+          body.setAttribute("hidden", "");
+          head.setAttribute("aria-expanded", "false");
+          head.querySelector(".chevron").textContent = "▶";
+          item.classList.remove("isOpen");
+        } else {
+          body.removeAttribute("hidden");
+          head.setAttribute("aria-expanded", "true");
+          head.querySelector(".chevron").textContent = "▼";
+          item.classList.add("isOpen");
+        }
+      });
+
+      if (catIndex === 0) item.classList.add("isOpen");
+      item.appendChild(head);
+      item.appendChild(body);
+      accordion.appendChild(item);
+    });
+
+    market.appendChild(accordion);
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   }
 
   // -------- LIVE WORLDWIDE UPDATES --------
@@ -267,17 +410,55 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // submit flow
+  // -------- SUBMIT FLOW --------
   stanceForm?.addEventListener("submit", (event) => {
     event.preventDefault();
-    saveEntryToLocalStorage(inputField?.value);
+
+    const text = (inputField?.value || "").trim();
+    if (!text) return;
+
+    let category = categorySelect?.value || "";
+
+    if (category === "__new__") {
+      const newCatVal = (newCategoryInput?.value || "").trim();
+      if (!newCatVal) {
+        if (statusEl) statusEl.textContent = "Please enter a category name.";
+        newCategoryInput?.focus();
+        return;
+      }
+
+      const existingCats = getCategories();
+      // If it's genuinely a new category name, check the limit
+      if (!existingCats.includes(newCatVal) && existingCats.length >= MAX_CATEGORIES) {
+        if (statusEl) {
+          statusEl.textContent = `Max ${MAX_CATEGORIES} categories reached. Please select an existing category.`;
+        }
+        return;
+      }
+      category = newCatVal;
+    }
+
+    if (!category) {
+      if (statusEl) statusEl.textContent = "Please select or create a category.";
+      categorySelect?.focus();
+      return;
+    }
+
+    saveEntry(text, category);
+
     if (inputField) inputField.value = "";
+    if (newCategoryInput) newCategoryInput.value = "";
+    if (statusEl) statusEl.textContent = "";
+
+    populateCategoryDropdown();
     showGlossary();
     displayGlossary();
     refreshLive();
   });
 
-  // initial boot
+  // -------- INITIAL BOOT --------
+  migrateEntries();
+  populateCategoryDropdown();
   displayGlossary();
   refreshLive();
   setInterval(refreshLive, REFRESH_INTERVAL_MS);
