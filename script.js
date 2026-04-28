@@ -158,9 +158,10 @@ document.addEventListener("DOMContentLoaded", () => {
     accordion.className = "accordion";
 
     allCategories.forEach((category, catIndex) => {
-      const entries = [...artEntries[category]].sort(
+      const entryList = [...artEntries[category]].sort(
         (a, b) => (b.ts || 0) - (a.ts || 0)
       );
+      // After sort, index 0 is always the most recent entry
 
       const item = document.createElement("div");
       item.className = "accordionItem";
@@ -172,7 +173,7 @@ document.addEventListener("DOMContentLoaded", () => {
       head.innerHTML = `
         <span class="catName">${escapeHtml(category)}</span>
         <span class="catMeta">
-          <span class="catCount">${entries.length} ${entries.length === 1 ? "entry" : "entries"}</span>
+          <span class="catCount">${entryList.length} ${entryList.length === 1 ? "entry" : "entries"}</span>
           <span class="chevron" aria-hidden="true">${catIndex === 0 ? "▼" : "▶"}</span>
         </span>
       `;
@@ -181,7 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
       body.className = "accordionBody";
       if (catIndex !== 0) body.setAttribute("hidden", "");
 
-      entries.forEach((entry, i) => {
+      entryList.forEach((entry, i) => {
         const row = document.createElement("div");
         row.className = "entryItem";
         if (i === 0) row.classList.add("isNew");
