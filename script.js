@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const now = new Date();
     artEntries[category].push({
       text,
-      timestamp: now.toLocaleString("en-US", {
+      timestamp: now.toLocaleString(undefined, {
         month: "short",
         day: "numeric",
         hour: "2-digit",
@@ -222,7 +222,8 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   }
 
   // -------- LIVE WORLDWIDE UPDATES --------
