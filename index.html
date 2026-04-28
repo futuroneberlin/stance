@@ -27,7 +27,16 @@
           autocomplete="off"
         />
 
-        <input type="hidden" id="chapter" value="general" />
+        <select id="categorySelect" required aria-label="Category"></select>
+
+        <input
+          id="newCategoryInput"
+          type="text"
+          placeholder="New category name…"
+          maxlength="40"
+          autocomplete="off"
+          class="isHidden"
+        />
 
         <div class="row">
           <button id="submitBtn" class="btn" type="submit">Submit</button>
