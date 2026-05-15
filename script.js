@@ -22,6 +22,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (glossaryPanel) glossaryPanel.classList.remove("isHidden");
   }
 
+  function showSubmit() {
+    if (glossaryPanel) glossaryPanel.classList.add("isHidden");
+    if (submitPanel) submitPanel.classList.remove("isHidden");
+    if (inputField) inputField.focus();
+  }
+
   function saveEntryToLocalStorage(raw) {
     const entryRaw = (raw || "").trim();
     if (!entryRaw) return;
@@ -104,6 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderChart(history) {
     if (!networkContainer) return;
+    if (!history || history.length === 0) return; // skip if no history yet
 
     // chart goes ABOVE the graph
     let chartEl = document.getElementById("liveChart");
@@ -262,23 +269,50 @@ document.addEventListener("DOMContentLoaded", () => {
       if (liveStatus) liveStatus.textContent = "Live updates loaded (Wikipedia + Wikidata + Met).";
       if (lastRefreshed) lastRefreshed.textContent = "Last refreshed: " + new Date().toLocaleString();
     } catch (e) {
-      console.error(e);
-      if (liveStatus) liveStatus.textContent = "Could not load live updates. Open DevTools Console to see the error.";
+      console.error("Live update error:", e);
+      // Show helpful message based on environment
+      const isDev = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+      if (isDev) {
+        if (liveStatus) liveStatus.textContent = "(Dev mode) Live crawler only works on production. Using local data in development.";
+      } else {
+        if (liveStatus) liveStatus.textContent = "Could not load live updates. Check your connection.";
+      }
     }
   }
 
   // submit flow
   stanceForm?.addEventListener("submit", (event) => {
     event.preventDefault();
-    saveEntryToLocalStorage(inputField?.value);
-    if (inputField) inputField.value = "";
+    const value = inputField?.value;
+    if (!value || !value.trim()) {
+      if (inputField) inputField.focus();
+      return;
+    }
+    saveEntryToLocalStorage(value);
+    stanceForm.reset(); // properly reset all form fields
     showGlossary();
     displayGlossary();
     refreshLive();
+    if (inputField) inputField.focus();
   });
 
+  // add back button to return to submit form
+  const glossaryHeader = document.querySelector(".glossaryHeader");
+  if (glossaryHeader) {
+    const backBtn = document.createElement("button");
+    backBtn.className = "backBtn";
+    backBtn.textContent = "← Submit Another";
+    backBtn.style.cssText = "position:absolute; left:12px; top:12px; background:transparent; border:none; color:inherit; cursor:pointer; font-size:14px; padding:4px 8px;";
+    backBtn.addEventListener("click", () => {
+      showSubmit();
+      if (inputField) inputField.focus();
+    });
+    glossaryHeader.style.position = "relative";
+    glossaryHeader.insertBefore(backBtn, glossaryHeader.firstChild);
+  }
+
   // initial boot
-  displayGlossary();
+  showSubmit(); // start on submit panel
   refreshLive();
   setInterval(refreshLive, REFRESH_INTERVAL_MS);
 });
