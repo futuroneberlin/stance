@@ -96,47 +96,52 @@ export default function AdminPage(){
 
   return (
     <div className="container">
-      <h1>Admin</h1>
+      <div className="hero">
+        <div>
+          <h1 className="hero-title">Admin Panel</h1>
+          <p className="hero-subtitle">Manage entries, set moderation status, or delete items.</p>
+        </div>
+      </div>
+
       <div className="card">
-        <strong>Admin-Key</strong>
-        <p style={{ marginTop: 8 }}>Setze den Key, um Loeschen/Status-Updates auszufuehren.</p>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+        <div className="card-title">Admin Key</div>
+        <p style={{ fontSize: 14, margin: '0 0 12px', color: '#666' }}>Enter your admin secret to unlock delete and status-update actions.</p>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 12 }}>
           <input
             className="input"
-            style={{ maxWidth: 420 }}
+            style={{ maxWidth: 320 }}
             type="password"
             value={adminKey}
             onChange={(e) => setAdminKey(e.target.value)}
             placeholder="Admin Secret"
           />
-          <button className="btn" type="button" onClick={saveKey}>Key speichern</button>
-          <button className="btn" type="button" onClick={clearKey}>Key entfernen</button>
+          <button className="btn" type="button" onClick={saveKey}>Save</button>
+          <button className="btn" type="button" onClick={clearKey} style={{ background: '#ddd', color: '#222' }}>Clear</button>
         </div>
-        <p style={{ marginTop: 8 }}>Status: {hasKey ? 'Key vorhanden' : 'kein Key gespeichert'}</p>
+        <p style={{ fontSize: 13, margin: 0, color: '#888' }}>Status: {hasKey ? '✓ Key ready' : '— No key'}</p>
       </div>
 
-      <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <strong>Eintraege</strong>
-          <button className="btn" type="button" onClick={loadEntries}>Neu laden</button>
+      <div className="card" style={{ marginTop: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div className="card-title" style={{ margin: 0 }}>Entries</div>
+          <button className="btn" type="button" onClick={loadEntries} style={{ fontSize: 13 }}>Reload</button>
         </div>
 
-        {loading && <p>Lade Eintraege ...</p>}
-        {error && <p style={{ color: '#b00020' }}>{error}</p>}
+        {loading && <p style={{ fontSize: 14, color: '#666' }}>Loading entries...</p>}
+        {error && <p style={{ color: '#d9534f', fontSize: 13, margin: 0 }}>{error}</p>}
 
-        {!loading && entries.length === 0 && <p>Keine Eintraege vorhanden.</p>}
+        {!loading && entries.length === 0 && <p style={{ color: '#999', fontSize: 14 }}>No entries yet.</p>}
 
         {!loading && entries.map((entry) => (
-          <div key={entry.id} style={{ borderTop: '1px solid #ddd', paddingTop: 12, marginTop: 12 }}>
-            <div><strong>ID:</strong> {entry.id}</div>
-            <div style={{ marginTop: 6 }}><strong>Text:</strong> {entry.text}</div>
-            <div style={{ marginTop: 6 }}><strong>Kategorie:</strong> {(entry.category || []).join(', ') || '—'}</div>
-            <div style={{ marginTop: 6 }}><strong>Status:</strong> {entry.moderationStatus || entry.moderation_status || 'none'}</div>
-            <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-              <button className="btn" type="button" onClick={() => updateStatus(entry.id, 'approved')}>Status: approved</button>
-              <button className="btn" type="button" onClick={() => updateStatus(entry.id, 'flagged')}>Status: flagged</button>
-              <button className="btn" type="button" onClick={() => updateStatus(entry.id, 'none')}>Status: none</button>
-              <button className="btn" type="button" onClick={() => deleteEntry(entry.id)}>Eintrag loeschen</button>
+          <div key={entry.id} style={{ borderTop: '1px solid #e8e8e8', paddingTop: 12, marginTop: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 4 }}>{entry.text}</div>
+            <div style={{ fontSize: 12, color: '#999', marginBottom: 8 }}>
+              ID: {entry.id} · {(entry.category || []).join(', ') || 'uncategorized'} · Status: {entry.moderationStatus || entry.moderation_status || 'none'}
+            </div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <button className="btn" type="button" onClick={() => updateStatus(entry.id, 'approved')} style={{ fontSize: 12, padding: '7px 11px' }}>→ Approve</button>
+              <button className="btn" type="button" onClick={() => updateStatus(entry.id, 'flagged')} style={{ fontSize: 12, padding: '7px 11px', background: '#ffcccb' }}>→ Flag</button>
+              <button className="btn" type="button" onClick={() => deleteEntry(entry.id)} style={{ fontSize: 12, padding: '7px 11px', background: '#ddd', color: '#222' }}>Delete</button>
             </div>
           </div>
         ))}

@@ -32,15 +32,14 @@ export default function Visualization({ entries }){
       .force('charge', d3.forceManyBody().strength(-120))
       .force('center', d3.forceCenter(width/2, height/2))
 
-    const link = svg.append('g').selectAll('line').data(links).enter().append('line').attr('stroke','#222').attr('stroke-opacity',0.35)
+    const link = svg.append('g').selectAll('line').data(links).enter().append('line').attr('stroke','#ddd').attr('stroke-opacity',0.5)
     const node = svg.append('g').selectAll('circle').data(nodes).enter().append('g')
-    node.append('circle').attr('r',9).attr('fill',(d)=>{
-      if((d.category || []).includes('intrinsic')) return '#0047ff'
-      if((d.category || []).includes('extrinsic')) return '#e10600'
-      return '#ffd400'
-    })
+    node.append('circle').attr('r',8).attr('fill',(d)=>{
+      if((d.category || []).includes('intrinsic')) return '#ffd700'
+      return '#e8e8e8'
+    }).attr('stroke','#ddd').attr('stroke-width',1)
     node.append('title').text(d=>d.text)
-    node.append('text').text(d=>d.text.slice(0,44)).attr('x',14).attr('y',4).style('font-size','11px').style('font-family','Space Grotesk, Arial').style('fill','#111')
+    node.append('text').text(d=>d.text.slice(0,40)).attr('x',12).attr('y',3).style('font-size','11px').style('font-family','Inter,Arial').style('fill','#222')
 
     sim.on('tick', ()=>{
       link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y)
@@ -51,9 +50,9 @@ export default function Visualization({ entries }){
   },[entries])
 
   return (
-    <div className="card">
-      <strong>Network Diagram</strong>
-      <svg ref={ref} style={{width:'100%',height:400}} />
+    <div className="card" style={{ marginTop: 24 }}>
+      <div className="card-title">Network</div>
+      <svg ref={ref} style={{ width: '100%', height: 380, marginTop: 12 }} />
     </div>
   )
 }

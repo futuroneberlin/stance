@@ -5,10 +5,44 @@ import sample from '../data/entries.json'
 
 export default function Home(){
   const [entries, setEntries] = useState(sample || [])
+  const [loaded, setLoaded] = useState(false)
 
   useEffect(()=>{
-    // fetch remote entries if available
-    fetch('/api/entries').then(r=>r.json()).then(data=>{ if(Array.isArray(data)) setEntries(data) }).catch(()=>{})
+    async function load(){
+      try{
+        // Fetch remote entries first
+        const remoteRes = await fetch('/api/entries')
+        const remoteData = await remoteRes.json()
+        if(Array.isArray(remoteData)){
+          setEntries(remoteData)
+        }
+
+        // Then load live definitions if we don't have many entries yet
+        if(!Array.isArray(remoteData) || remoteData.length < 8){
+          const defRes = await fetch('/api/fetch-definitions')
+          const defData = await defRes.json()
+          if(defData.ok && Array.isArray(defData.entries)){
+            setEntries((prev) => {
+              const existing = Array.isArray(prev) ? prev : []
+              const merged = [...existing, ...defData.entries]
+              // Deduplicate by id
+              const seen = new Set(existing.map((e) => e.id))
+              return merged.filter((e) => {
+                if(seen.has(e.id)) return false
+                seen.add(e.id)
+                return true
+              })
+            })
+          }
+        }
+      }catch(err){
+        console.error('Load error:', err)
+      }finally{
+        setLoaded(true)
+      }
+    }
+
+    load()
   },[])
 
   function addLocal(e){
