@@ -6,7 +6,7 @@ export default function RightZone({ entries, onAdd }){
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const userEntries = (entries || []).filter((e) => !e.source || !['wikipedia', 'wikidata'].includes(e.source))
+  const userEntries = (entries || []).filter((e) => !e.source || !['wikipedia', 'wikidata', 'wiktionary', 'dbpedia'].includes(e.source))
 
   function inferCategories(text){
     const t = String(text || '').toLowerCase()
