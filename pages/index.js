@@ -12,32 +12,37 @@ export default function Home(){
   },[])
 
   function addLocal(e){
+    if(!e || !e.id || !e.text) return
     setEntries(prev=>[...prev, e])
   }
 
   return (
     <div className="container">
-      <div className="header">
-        <h1>Art as Stance</h1>
-        <a href="https://project-zp3zk.vercel.app/" target="_blank" rel="noreferrer">Live</a>
+      <div className="hero">
+        <div>
+          <h1 className="hero-title">ART AS STANCE</h1>
+          <p className="hero-subtitle">A living glossary where language, participation and external data continuously reshape meaning.</p>
+        </div>
+        <a className="live-link" href="https://project-zp3zk.vercel.app/" target="_blank" rel="noreferrer">LIVE</a>
       </div>
 
-      <div className="card">
-        <h2>Über dieses Projekt</h2>
-        <p>Ein dynamisches, semantisches System und wachendes Glossar — basierend auf dem bereitgestellten README.</p>
-        <pre style={{whiteSpace:'pre-wrap'}}>
-{`Art as Stance
-
-Art is ...
-I acted through art today by ...
-
-Beiträge formen ein sich entwickelndes Netzwerk.`}
-        </pre>
+      <div className="zones">
+        <div className="zone zone-left">
+          <div className="zone-label">LEFT</div>
+          <p>Internet-based references and external semantic material.</p>
+        </div>
+        <div className="zone zone-center">
+          <div className="zone-label">CENTER</div>
+          <p>Overlaps, tensions and hybrid meanings in a shared relational core.</p>
+        </div>
+        <div className="zone zone-right">
+          <div className="zone-label">RIGHT</div>
+          <p>Human statements, subjective experiences and analog observations.</p>
+        </div>
       </div>
 
       <EntryForm onAdd={addLocal} />
       <Visualization entries={entries} />
-
     </div>
   )
 }
