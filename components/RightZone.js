@@ -87,7 +87,7 @@ export default function RightZone({ entries, onAdd }){
             rows={2}
             value={artIs}
             onChange={e=>setArtIs(e.target.value)}
-            placeholder='collective memory, repair, listening'
+            placeholder=''
             style={{ fontSize: 13 }}
           />
         </div>
@@ -99,7 +99,7 @@ export default function RightZone({ entries, onAdd }){
             rows={2}
             value={actedBy}
             onChange={e=>setActedBy(e.target.value)}
-            placeholder='drawing with neighbors, sharing silence'
+            placeholder=''
             style={{ fontSize: 13 }}
           />
         </div>
