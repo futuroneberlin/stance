@@ -1,0 +1,9 @@
+html,body,#__next{height:100%;}
+body{font-family:Inter,Segoe UI,Roboto,Arial,Helvetica,sans-serif;margin:0;padding:0;background:#fff;color:#111}
+.container{max-width:1000px;margin:24px auto;padding:0 20px}
+.header{display:flex;align-items:center;justify-content:space-between}
+.card{background:#f8f8f9;border:1px solid #eee;padding:16px;border-radius:8px;margin-top:16px}
+.row{display:flex;gap:16px}
+.col{flex:1}
+.btn{background:#111;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+.input,textarea{width:100%;padding:8px;border:1px solid #ddd;border-radius:6px}
