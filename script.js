@@ -59,7 +59,14 @@ document.addEventListener("DOMContentLoaded", () => {
     market.innerHTML = "";
     const artEntries = JSON.parse(localStorage.getItem("artEntries") || "{}");
 
-    for (const category in artEntries) {
+    // Sort categories: "general" first, then alphabetically
+    const categories = Object.keys(artEntries).sort((a, b) => {
+      if (a === "general") return -1;
+      if (b === "general") return 1;
+      return a.localeCompare(b);
+    });
+
+    for (const category of categories) {
       const term = document.createElement("div");
       term.className = "term";
 
@@ -76,10 +83,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const rows = document.createElement("div");
       rows.className = "rows";
 
-      artEntries[category].forEach((entry, index) => {
+      // Sort entries by timestamp (newest first)
+      const sortedEntries = [...artEntries[category]].sort((a, b) => {
+        return new Date(b.timestamp) - new Date(a.timestamp);
+      });
+
+      sortedEntries.forEach((entry, index) => {
         const rowItem = document.createElement("div");
         rowItem.className = "rowItem";
-        if (index === artEntries[category].length - 1) rowItem.classList.add("isNew");
+        if (index === 0) rowItem.classList.add("isNew"); // Highlight newest
         rowItem.innerHTML = `<div class="ts">${entry.timestamp}</div><div class="msg">${entry.text}</div>`;
         rows.appendChild(rowItem);
       });
@@ -178,42 +190,68 @@ document.addEventListener("DOMContentLoaded", () => {
     const width = Math.min(900, networkContainer.clientWidth || 900);
     const height = 420;
 
+    // Create peer-to-peer mesh links (web of connections, not hub-spoke)
+    const meshLinks = [];
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < Math.min(i + 3, nodes.length); j++) {
+        if (nodes[i].id !== nodes[j].id) {
+          meshLinks.push({ source: nodes[i].id, target: nodes[j].id, weight: 1 });
+        }
+      }
+    }
+
     const svg = d3
       .select(graphEl)
       .append("svg")
       .attr("width", width)
       .attr("height", height)
-      .style("background", "rgba(0,0,0,0.20)")
-      .style("border", "1px solid rgba(0,0,0,0.25)")
-      .style("border-radius", "14px");
+      .style("background", "linear-gradient(135deg, rgba(31,41,55,0.4), rgba(17,24,39,0.5))")
+      .style("border", "2px solid rgba(69, 123, 157, 0.4)")
+      .style("border-radius", "12px");
 
     const sim = d3
       .forceSimulation(nodes)
-      .force("link", d3.forceLink(links).id((d) => d.id).distance(85))
-      .force("charge", d3.forceManyBody().strength(-240))
+      .force("link", d3.forceLink(meshLinks).id((d) => d.id).distance(80))
+      .force("charge", d3.forceManyBody().strength(-280))
+      .force("collide", d3.forceCollide(24))
       .force("center", d3.forceCenter(width / 2, height / 2));
 
+    // Links with gradient effect
     const link = svg
       .append("g")
-      .attr("stroke", "rgba(255,215,0,0.45)")
+      .attr("stroke", "rgba(69, 123, 157, 0.35)")
       .selectAll("line")
-      .data(links)
+      .data(meshLinks)
       .join("line")
-      .attr("stroke-width", 1.2);
+      .attr("stroke-width", 1.5)
+      .style("stroke", (d) => {
+        const colors = ["#E63946", "#457B9D", "#FFB703"];
+        return colors[Math.floor(Math.random() * colors.length)];
+      })
+      .style("opacity", 0.4);
+
+    // Nodes with source-based colors
+    const colorMap = {
+      "wikipedia": "#E63946",
+      "wikidata": "#457B9D",
+      "met": "#FFB703",
+      "hub": "#1B1B1B"
+    };
 
     const node = svg
       .append("g")
       .selectAll("circle")
       .data(nodes)
       .join("circle")
-      .attr("r", (d) => (d.source === "hub" ? 10 : 6))
-      .attr("fill", (d) => (d.source === "hub" ? "rgba(0,0,0,0.95)" : "rgba(0,0,0,0.75)"))
-      .attr("stroke", "rgba(255,215,0,0.95)")
-      .attr("stroke-width", 1.4)
+      .attr("r", 7)
+      .attr("fill", (d) => colorMap[d.source] || "#6C757D")
+      .attr("stroke", "#FFFFFF")
+      .attr("stroke-width", 2)
+      .style("filter", "drop-shadow(0 2px 8px rgba(0,0,0,0.3))")
       .call(
         d3.drag()
           .on("start", (event, d) => {
-            if (!event.active) sim.alphaTarget(0.25).restart();
+            if (!event.active) sim.alphaTarget(0.3).restart();
             d.fx = d.x;
             d.fy = d.y;
           })
@@ -228,16 +266,33 @@ document.addEventListener("DOMContentLoaded", () => {
           })
       );
 
+    // Labels with readable background
     const label = svg
       .append("g")
-      .selectAll("text")
+      .selectAll("g")
       .data(nodes)
-      .join("text")
-      .text((d) => d.label || d.id)
-      .attr("font-size", 11)
-      .attr("fill", "rgba(0,0,0,0.9)")
-      .attr("stroke", "rgba(255,215,0,0.35)")
-      .attr("stroke-width", 0.8);
+      .join("g");
+
+    label
+      .append("rect")
+      .attr("x", -40)
+      .attr("y", -10)
+      .attr("width", 80)
+      .attr("height", 18)
+      .attr("rx", 4)
+      .attr("fill", "rgba(31, 41, 55, 0.85)")
+      .attr("stroke", "rgba(255,255,255,0.2)")
+      .attr("stroke-width", 1);
+
+    label
+      .append("text")
+      .text((d) => d.label?.substring(0, 12) || d.id.substring(0, 12))
+      .attr("text-anchor", "middle")
+      .attr("dy", "0.3em")
+      .attr("font-size", "10px")
+      .attr("font-weight", "600")
+      .attr("fill", "#FFFFFF")
+      .style("pointer-events", "none");
 
     sim.on("tick", () => {
       link
@@ -248,7 +303,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
 
-      label.attr("x", (d) => d.x + 10).attr("y", (d) => d.y + 4);
+      label.attr("transform", (d) => `translate(${d.x}, ${d.y})`);
     });
   }
 

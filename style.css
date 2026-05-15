@@ -104,12 +104,13 @@ input, select{
   padding: 12px 12px;
   border-radius: 12px;
   border: 1px solid var(--border);
-  background: rgba(255,255,255,0.14);
-  color: rgba(0,0,0,0.92);
+  background: #FFFFFF;
+  color: var(--text);
   outline: none;
+  box-shadow: var(--shadow-sm);
 }
 
-input::placeholder{ color: rgba(0,0,0,0.55); }
+input::placeholder{ color: var(--muted); }
 
 input:focus, select:focus{
   border-color: rgba(0,0,0,0.35);
@@ -125,19 +126,21 @@ input:focus, select:focus{
 .btn{
   min-width: 160px;
   border-radius: 12px;
-  border: 1px solid rgba(0,0,0,0.30);
-  background: rgba(0,0,0,0.86);
-  color: var(--yellow);
+  border: 2px solid var(--primary);
+  background: var(--primary);
+  color: var(--text-light);
   cursor:pointer;
   padding: 12px 14px;
   font-weight: 700;
   letter-spacing: 0.2px;
-  transition: transform 0.06s ease, box-shadow 0.12s ease, background 0.12s ease;
+  transition: all 0.2s ease;
 }
 .btn:hover{
-  box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+  background: #D62828;
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
 }
-.btn:active{ transform: translateY(1px); }
+.btn:active{ transform: translateY(0); }
 .btn:disabled{ opacity:0.55; cursor:not-allowed; }
 
 .status{
@@ -150,14 +153,14 @@ input:focus, select:focus{
 /* ---------- GLOSSARY (trading terminal) ---------- */
 .glossary{
   margin-top: 24px;
-  background: linear-gradient(180deg, var(--panel), var(--panel2));
-  border: 1px solid rgba(0,0,0,0.28);
+  background: linear-gradient(135deg, var(--panel), var(--panel2));
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: clamp(16px, 3vw, 24px);
   backdrop-filter: blur(10px);
   position: relative;
-  color: rgba(255,255,255,0.92);
+  color: var(--text-light);
 }
 
 .glossary::before{
@@ -166,12 +169,12 @@ input:focus, select:focus{
   inset:0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(255,215,0,0.35), rgba(255,255,255,0.06), rgba(255,215,0,0.16));
+  background: linear-gradient(135deg, rgba(230, 57, 70, 0.25), rgba(69, 123, 157, 0.15), rgba(255, 183, 3, 0.1));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events:none;
-  opacity: 0.50;
+  opacity: 0.6;
 }
 
 .glossaryHeader{
@@ -200,9 +203,9 @@ input:focus, select:focus{
   font-size: 11px;
   letter-spacing: 1.6px;
   text-transform: uppercase;
-  color: rgba(255,215,0,0.95);
-  border: 1px solid rgba(255,215,0,0.35);
-  background: rgba(255,215,0,0.08);
+  color: var(--primary);
+  border: 2px solid var(--primary);
+  background: rgba(230, 57, 70, 0.08);
   padding: 6px 8px;
   border-radius: 999px;
 }
@@ -216,24 +219,27 @@ input:focus, select:focus{
 }
 
 .tab{
-  border: 1px solid rgba(255,255,255,0.14);
-  background: rgba(255,255,255,0.03);
-  color: rgba(255,255,255,0.78);
-  padding: 8px 10px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.05);
+  color: var(--text-light);
+  padding: 8px 12px;
   border-radius: 999px;
   font-size: 12px;
   letter-spacing: 0.6px;
   text-transform: uppercase;
   cursor: pointer;
   user-select: none;
-  transition: border-color 0.12s ease, background 0.12s ease;
+  transition: all 0.12s ease;
 }
 
-.tab:hover{ border-color: rgba(255,215,0,0.35); }
+.tab:hover{ 
+  background: rgba(255,255,255,0.1);
+  border-color: var(--accent);
+}
 .tab.isActive{
-  border-color: rgba(255,215,0,0.65);
-  background: rgba(255,215,0,0.10);
-  color: #FFD700;
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--text-light);
 }
 
 /* LIVE UPDATES block */
@@ -249,11 +255,11 @@ input:focus, select:focus{
   font-weight: 700;
   letter-spacing: 0.04em;
   margin-bottom: 6px;
-  color: rgba(255,215,0,0.95);
+  color: var(--accent);
 }
 
 .liveCopy{
-  color: rgba(255,255,255,0.72);
+  color: rgba(255,255,255,0.8);
   font-size: 13px;
   line-height: 1.4;
   margin-bottom: 10px;
@@ -261,21 +267,22 @@ input:focus, select:focus{
 
 .live-status,
 .last-refreshed{
-  background: rgba(0,0,0,0.18);
-  border: 1px solid rgba(255,215,0,0.22);
-  color: rgba(255,215,0,0.95);
+  background: rgba(0,0,0,0.3);
+  border: 2px solid var(--secondary);
+  color: rgba(255,255,255,0.95);
   padding: 12px;
   border-radius: 12px;
   margin: 10px 0;
+  font-weight: 500;
 }
 
 /* Card wrapper used by chart/graph */
 .liveCard{
-  background: rgba(0,0,0,0.12);
-  border: 1px solid rgba(255,215,0,0.18);
+  background: rgba(0,0,0,0.2);
+  border: 2px solid var(--secondary);
   border-radius: 12px;
-  padding: 12px;
-  margin: 10px 0;
+  padding: 14px;
+  margin: 12px 0;
 }
 
 /* Trading panels grid */
@@ -287,10 +294,10 @@ input:focus, select:focus{
 
 /* Terminal panel */
 .term{
-  border: 1px solid rgba(255,255,255,0.10);
-  border-radius: 14px;
+  border: 2px solid var(--secondary);
+  border-radius: 12px;
   overflow: hidden;
-  background: rgba(0,0,0,0.22);
+  background: rgba(0,0,0,0.3);
 }
 
 .termHead{
@@ -298,20 +305,25 @@ input:focus, select:focus{
   justify-content: space-between;
   align-items: baseline;
   padding: 12px 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.10);
-  background: rgba(255,255,255,0.03);
+  border-bottom: 2px solid var(--secondary);
+  background: rgba(69, 123, 157, 0.15);
 }
 
 .termHead .ch{
   text-transform: uppercase;
   letter-spacing: 1.1px;
   font-size: 12px;
-  color: rgba(255,255,255,0.82);
+  color: var(--accent);
+  font-weight: 700;
 }
 
 .termHead .count{
   font-size: 12px;
-  color: rgba(255,255,255,0.45);
+  color: rgba(255,255,255,0.7);
+  background: var(--primary);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 600;
 }
 
 /* Column headers like terminal */
@@ -320,11 +332,12 @@ input:focus, select:focus{
   grid-template-columns: 86px 1fr;
   gap: 12px;
   padding: 10px 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.10);
-  color: rgba(255,255,255,0.50);
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.65);
   font-size: 11px;
   letter-spacing: 1.1px;
   text-transform: uppercase;
+  font-weight: 600;
 }
 
 .rows{
@@ -335,11 +348,11 @@ input:focus, select:focus{
 
 .rows::-webkit-scrollbar{ width: 10px; }
 .rows::-webkit-scrollbar-thumb{
-  background: rgba(255,215,0,0.18);
+  background: var(--secondary);
   border-radius: 10px;
 }
 .rows::-webkit-scrollbar-track{
-  background: rgba(255,255,255,0.03);
+  background: rgba(255,255,255,0.05);
 }
 
 /* Rows */
@@ -355,24 +368,26 @@ input:focus, select:focus{
 
 .ts{
   font-size: 12px;
-  color: rgba(255,255,255,0.55);
+  color: var(--accent);
   white-space: nowrap;
+  font-weight: 500;
 }
 
 .msg{
   font-size: 13px;
   line-height: 1.45;
-  color: rgba(255,255,255,0.92);
+  color: rgba(255,255,255,0.95);
+  word-break: break-word;
 }
 
 /* New tick flash */
 .rowItem.isNew{
-  background: linear-gradient(90deg, rgba(255,215,0,0.18), rgba(255,215,0,0.00) 70%);
-  outline: 1px solid rgba(255,215,0,0.20);
+  background: linear-gradient(90deg, rgba(230, 57, 70, 0.15), rgba(230, 57, 70, 0.00) 70%);
+  outline: 1px solid rgba(230, 57, 70, 0.25);
   animation: tickFlash 1.6s ease-out forwards;
 }
 @keyframes tickFlash{
-  from{ background: linear-gradient(90deg, rgba(255,215,0,0.22), rgba(255,215,0,0.00) 70%); }
+  from{ background: linear-gradient(90deg, rgba(230, 57, 70, 0.22), rgba(230, 57, 70, 0.00) 70%); }
   to{ background: transparent; }
 }
 
