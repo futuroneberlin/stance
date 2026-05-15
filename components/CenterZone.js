@@ -22,9 +22,10 @@ export default function CenterZone({ entries }){
       }
     }
 
-    const width = 400, height = 600
+    const width = 500, height = 600
     d3.select(ref.current).selectAll('*').remove()
-    const svg = d3.select(ref.current).attr('viewBox', `0 0 ${width} ${height}`)
+    const svg = d3.select(ref.current)
+      .attr('viewBox', `0 0 ${width} ${height}`)
 
     const sim = d3.forceSimulation(nodes)
       .force('link', d3.forceLink(links).id(d=>d.id).distance(60))
@@ -52,7 +53,7 @@ export default function CenterZone({ entries }){
     <div className="zone-content">
       <div className="zone-label">CENTER</div>
       <p className="zone-intro">Overlaps, tensions and hybrid meanings in a shared relational core.</p>
-      <svg ref={ref} style={{width:'100%',height:500,marginTop:12}} />
+      <svg ref={ref} style={{width:'100%',height:'auto',aspectRatio:'1',marginTop:12,minHeight:300,border:'1px solid #e8e8e8'}} />
     </div>
   )
 }
