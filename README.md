@@ -1,352 +1,104 @@
 # Art as Stance
 
-## Overview
+Art as Stance ist als dauerhaft wachsendes semantisches System gebaut. Jeder Beitrag wird in Supabase gespeichert, daraus werden Knoten, Kategorien und Relationen abgeleitet, und die Netzstruktur wächst bei jeder Teilnahme weiter.
 
-**Art as Stance** is an evolving semantic system and living glossary that explores the questions:
+## 1. User Journey
 
-- **“Art is …”**
-- **“I acted through art today by …”**
+### Phase 1: Entry Screen only
+- Sichtbar sind ausschließlich Titel, Beschreibung, zwei Felder und Submit.
+- Mindestens ein Feld muss ausgefüllt sein.
+- Vor der Teilnahme werden keine Zonen, Netzwerke oder Diagramme gerendert.
 
-The project investigates how artistic meaning emerges through language, participation, external information, and collective interaction.
+### Phase 2: Semantischer Raum
+- Nach dem Submit startet die Verarbeitung mit Overlay und Reveal-Transition.
+- Erst danach erscheinen LEFT / CENTER / RIGHT sowie der Connection Layer.
 
-Instead of defining art as a fixed concept, the system continuously redefines and reorganizes artistic meaning through user input, relational structures, and internet-based data.
+## 2. Persistente Architektur (Supabase)
 
-Each contribution changes the network.
+Die Runtime speichert semantische Daten in Supabase-Tabellen:
 
----
+- `entries`: Rohbeiträge und semantische Felder pro Beitrag.
+- `nodes`: normalisierte Knoten des Graphen (entry, category, term, external_entry).
+- `links`: relationale Kanten zwischen Knoten (z. B. `semantic_similarity`, `classified_as`, `mentions`).
+- `categories`: Kategoriestamm mit Nutzungszählern.
 
-# Core Concept
+SQL-Schema/Migration:
+- `supabase/migrations/20260518_init_semantic_graph.sql`
 
-The platform creates a dynamic relationship between:
+## 3. Datenfluss und Semantik
 
-- external digital knowledge
-- overlapping semantic relations
-- personal human input
+Pipeline (in `pages/index.js`):
 
-The system is structured into three spatial and conceptual zones:
+1. Nutzer gibt Text ein und sendet ab.
+2. Das System speichert den Beitrag über `POST /api/entries` in Supabase.
+3. Externe Datenquellen werden geladen (`/api/fetch-definitions`) und als zusätzliche Entries behandelt.
+4. Kategorien und Relations-Tokens werden aus allen bekannten Texten extrahiert oder ergänzt.
+5. Embeddings werden berechnet (`/api/embeddings`).
+6. Cosine Similarity erzeugt `semantic_similarity`-Links.
+7. Die vollständigen semantischen Artefakte werden zurück in Supabase geschrieben.
 
-| Zone | Description |
-|---|---|
-| LEFT | Internet-based data, external references, online semantic material |
-| CENTER | Intersections, overlaps, hybrid meanings, relational space |
-| RIGHT | User-generated entries, personal statements, analog experiences |
+## 4. Welche Daten wohin gehen
 
-These three areas continuously influence one another and generate new semantic relations over time.
+- `entries`: Rohbeiträge und ihre semantische Anreicherung. Wichtige Felder: `id`, `text`, `category[]`, `relations[]`, `source`, `timestamp`, `moderation_status`, `metadata`.
+- `nodes`: normalisierte Graph-Knoten für Beiträge, Kategorien und Terme. Wichtige Felder: `node_id`, `label`, `node_type`, `source_entry_id`, `metadata`.
+- `links`: relationale Kanten zwischen Knoten. Wichtige Felder: `source_node_id`, `target_node_id`, `relation_type`, `weight`, `context_entry_id`, `metadata`.
+- `categories`: Kategoriestamm mit Nutzungszählung und optionaler Beschreibung. Wichtige Felder: `category_key`, `label`, `usage_count`, `description`, `metadata`.
 
----
+## 5. LEFT / CENTER / RIGHT als zusammenhängendes System
 
-# Main Questions
+- LEFT: externe Begriffe und Referenzen reagieren auf die aktuelle Eingabe und spiegeln außerhalb des Systems liegende Bezüge.
+- CENTER: zeigt Cluster, Overlaps, Brücken und Dichte im Kern der semantischen Struktur.
+- RIGHT: zeigt User-Einträge, deren Kategorien und die direkt abgeleiteten Verbindungen.
+- Verbindungsebene: `SemanticOverlay` zeichnet relationale SVG-Pfade zwischen den Zonen auf Basis persistierter Links.
 
-The project is built around two open prompts:
+## 6. Wie das Netzwerk wächst
 
-```text
-Art is ...
-```
+Das Netzwerk skaliert inkrementell:
 
-```text
-I acted through art today by ...
-```
+- Jeder neue Beitrag erzeugt mindestens einen Entry-Node.
+- Kategorien und Terme werden als wiederverwendbare Nodes upserted, nicht doppelt angelegt.
+- Neue Kanten verbinden bestehende und neue Nodes über stabile IDs.
+- Wiederholte Begriffe und Kategorien verdichten Cluster statt Duplikate zu erzeugen.
 
-Every answer becomes part of a growing semantic archive.
+## 7. Modularität und institutionelle Skalierbarkeit
 
----
+Bausteine:
 
-# Input Categories
+- Client Persistence Layer: `lib/persistence.js`
+- Server DB Client: `lib/supabaseAdmin.js`
+- API-Module:
+	- `pages/api/entries.js`
+	- `pages/api/categories.js`
+	- `pages/api/nodes.js`
+	- `pages/api/links.js`
+	- `pages/api/network.js`
 
-User contributions are grouped into three conceptual categories:
+Diese Trennung erlaubt:
 
-## Intrinsic
+- spätere RLS-Policies und Rollenmodelle,
+- Monitoring/Audit auf Tabellenebene,
+- institutionelle Erweiterung (mehr Quellen, kuratorische Workflows, Moderation).
 
-Internal perception and subjective experience.
+## 8. Status der lokalen JSON-Dateien
 
-Examples:
-- emotions
-- intuition
-- memory
-- identity
-- inner reflection
+Die Dateien in `data/` sind keine Runtime-Quelle mehr. Das laufende System liest und schreibt ausschließlich über die Supabase-Tabellen und die API-Routen; die JSON-Dateien bleiben höchstens als historische Snapshots oder Seed-Artefakte im Repository.
 
----
-
-## Extrinsic
-
-External systems and societal structures.
-
-Examples:
-- institutions
-- politics
-- economics
-- visibility
-- public interaction
-
----
-
-## Shared / Environmental
-
-Collective exchange and environmental relations.
-
-Examples:
-- dialogue
-- participation
-- ecology
-- networks
-- collaboration
-- spatial interaction
-
----
-
-# System Functions
-
-## 1. User Input System
-
-Users submit statements related to art, action, perception, or experience.
-
-Example:
-
-```text
-Art is collective memory.
-```
-
-```text
-I acted through art today by listening carefully.
-```
-
-The system stores and categorizes each entry.
-
----
-
-## 2. Semantic Categorization
-
-Inputs are analyzed and assigned to one or multiple conceptual categories:
-
-- intrinsic
-- extrinsic
-- shared/environmental
-
-Categorization may be based on:
-- semantic similarity
-- keyword relations
-- contextual meaning
-- AI-assisted analysis
-
----
-
-## 3. Dynamic Network Growth
-
-Every entry creates new semantic nodes and relations.
-
-The network evolves dynamically through:
-- repeated concepts
-- overlapping meanings
-- relational proximity
-- category intersections
-
-The structure is never static.
-
-New inputs continuously reshape the system.
-
----
-
-## 4. Internet Data Layer (LEFT)
-
-The left side of the system integrates external digital information.
-
-Possible sources include:
-- online archives
-- public datasets
-- internet text corpora
-- semantic databases
-- APIs
-- cultural references
-
-This layer continuously introduces external definitions and associations of art.
-
----
-
-## 5. Overlap Zone (CENTER)
-
-The center area represents semantic intersections between:
-- internet-derived information
-- user-generated inputs
-- recurring concepts
-- hybrid meanings
-
-This area visualizes:
-- overlaps
-- tensions
-- contradictions
-- shared structures
-
-It acts as the relational core of the system.
-
----
-
-## 6. Analog / Human Input Layer (RIGHT)
-
-The right side contains direct human contributions.
-
-This includes:
-- written reflections
-- personal experiences
-- subjective definitions
-- analog observations
-- participatory statements
-
-This layer prioritizes human interpretation over fixed classification.
-
----
-
-## 7. Diagram System
-
-The project includes a dynamic visualization system that continuously reorganizes relationships between:
-- concepts
-- categories
-- meanings
-- archives
-- user interactions
-- external semantic material
-
-The diagram evolves over time as new information enters the system.
-
----
-
-# Data Flow
-
-```text
-User Input
-    ↓
-Semantic Analysis
-    ↓
-Category Assignment
-    ↓
-Relation Generation
-    ↓
-Network Update
-    ↓
-Diagram Reorganization
-```
-
----
-
-# Example Entry Structure
-
-```json
-{
-  "id": "entry_001",
-  "text": "Art is collective memory",
-  "category": ["shared", "intrinsic"],
-  "timestamp": 1710000000,
-  "relations": ["memory", "community", "archive"]
-}
-```
-
----
-
-# Network Logic
-
-Nodes connect based on:
-- semantic similarity
-- conceptual overlap
-- repeated language patterns
-- shared categories
-- contextual relations
-- user participation frequency
-
-The network grows as a living semantic ecosystem.
-
----
-
-# Project Goals
-
-The project aims to create:
-
-- a living glossary of artistic meaning
-- a participatory semantic archive
-- a continuously evolving conceptual network
-- a bridge between human experience and digital information
-- a system where artistic meaning is never fixed
-
----
-
-# Technology
-
-## Frontend
-- Next.js
-- React
-- TypeScript
-
-## Visualization
-- D3.js / Three.js / Cytoscape.js
-
-## Styling
-- TailwindCSS
-
-## Deployment
-- Vercel
-
-## Optional AI / Semantic Tools
-- OpenAI API
-- embeddings
-- vector similarity
-- NLP pipelines
-
----
-
-# Installation
+## 9. Setup
 
 ```bash
 npm install
 npm run dev
 ```
 
----
-
-# Environment Variables
+Erforderliche Variablen (Server):
 
 ```env
+SUPABASE_URL=
+SUPABASE_SERVICE_KEY=
+ADMIN_SECRET=
 OPENAI_API_KEY=
 ```
 
----
+## 10. Wichtiger Hinweis
 
-# Development
-
-Run local development server:
-
-```bash
-npm run dev
-```
-
-Build production version:
-
-```bash
-npm run build
-```
-
----
-
-# System Objective
-
-Art as Stance is not designed to produce fixed definitions of art.
-
-The system functions as a continuously evolving semantic environment where meaning emerges through interaction between:
-- users
-- language
-- external data
-- participation
-- collective interpretation
-
-Every contribution transforms the structure.
-
----
-
-# Live Project
-
-https://project-zp3zk.vercel.app/
-
----
-
-# License
-
-Experimental artistic research project.
-Open for conceptual development and collaborative expansion.
+Die Persistenz ist auf Supabase ausgerichtet. Lokale JSON-Dateien dienen nicht mehr als Runtime-Storage-Pfad fuer `entries`, `nodes`, `links`, `categories`.

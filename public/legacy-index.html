@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>FUTUR ONE — Living Glossary (legacy)</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <main class="page">
+    <!-- SUBMIT SCREEN (legacy static copy) -->
+    <section id="submitPanel" class="submit">
+      <h1 class="q">I acted through art today by…</h1>
+
+      <form id="stanceForm" class="form">
+        <input
+          id="inputField"
+          type="text"
+          placeholder="Write your action…"
+          required
+          maxlength="220"
+          autocomplete="off"
+        />
+
+        <input type="hidden" id="chapter" value="general" />
+
+        <div class="row">
+          <button id="submitBtn" class="btn" type="submit">Submit</button>
+        </div>
+
+        <p id="status" class="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <!-- GLOSSARY SCREEN -->
+    <section id="glossaryPanel" class="glossary isHidden">
+      <header class="glossaryHeader">
+        <div class="left">
+          <img class="logo" src="logo.png" alt="Futur One" />
+          <div class="hint">LIVE</div>
+        </div>
+
+        <div class="controls">
+          <div id="tabs" class="tabs" aria-label="Categories"></div>
+        </div>
+      </header>
+
+      <!-- LIVE ART UPDATES (now inside the actual UI panel) -->
+      <section class="liveBlock" aria-label="Live Art Updates">
+        <div class="liveTitle">Live Art Updates</div>
+        <div class="liveCopy">
+          Updates from the FUTUR ONE crawler (open/free sources). Auto-refresh every 7 hours.
+        </div>
+        <div id="liveStatus" class="live-status">Loading latest updates...</div>
+        <div id="lastRefreshed" class="last-refreshed"></div>
+        <div id="networkContainer" class="networkContainer"></div>
+      </section>
+
+      <div id="market" class="market"></div>
+      <div id="single" class="single isHidden"></div>
+    </section>
+  </main>
+
+     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="/script.js"></script>
+</body>
+</html>

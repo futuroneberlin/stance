@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export default function EntryForm({ onAdd }){
+export default function EntryForm({ onSubmit }){
   const [artIs, setArtIs] = useState('')
   const [actedBy, setActedBy] = useState('')
   const [error, setError] = useState('')
@@ -27,7 +27,7 @@ export default function EntryForm({ onAdd }){
   }
 
   async function submit(e){
-    e.preventDefault()
+    e && e.preventDefault()
     setError('')
 
     const chapterOne = artIs.trim()
@@ -37,75 +37,52 @@ export default function EntryForm({ onAdd }){
       return
     }
 
-    const payloads = []
-    if(chapterOne){
-      const text = /^art is\b/i.test(chapterOne) ? chapterOne : `Art is ${chapterOne}`
-      payloads.push({ text, category: inferCategories(text), relations: inferRelations(text) })
-    }
-    if(chapterTwo){
-      const text = /^i acted through art today by\b/i.test(chapterTwo) ? chapterTwo : `I acted through art today by ${chapterTwo}`
-      payloads.push({ text, category: inferCategories(text), relations: inferRelations(text) })
-    }
-
-    setSaving(true)
+    // Pass raw inputs to parent for central processing pipeline
     try{
-      for(const payload of payloads){
-        const res = await fetch('/api/entries', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify(payload)
-        })
-        const data = await res.json()
-        const entry = data?.entry || data
-        if(entry && entry.id && entry.text){
-          onAdd && onAdd(entry)
-        }
-      }
-
+      setSaving(true)
+      await Promise.resolve(onSubmit && onSubmit({ chapterOne, chapterTwo }))
       setArtIs('')
       setActedBy('')
     }catch(err){
       console.error(err)
-      setError('Saving failed. Please try again.')
+      setError('Submission failed. Please try again.')
     }finally{
       setSaving(false)
     }
   }
 
   return (
-    <form onSubmit={submit} className="card entry-card">
-      <div className="card-title">Contribute</div>
+    <form onSubmit={submit} className="entry-screen-form">
+      <h1 className="entry-title">ART AS STANCE</h1>
 
-      <div className="chapter">
-        <label className="chapter-label" htmlFor="chapter-1">Chapter I</label>
-        <div className="prompt">Art is ...</div>
+      <div className="entry-field">
+        <label className="sr-only" htmlFor="chapter-1">Art is</label>
         <textarea
           id="chapter-1"
-          className="input"
+          className="entry-input"
           rows={3}
           value={artIs}
           onChange={e=>setArtIs(e.target.value)}
-          placeholder={'collective memory, friction, repair, future ritual'}
+          placeholder={'Art is ...'}
         />
       </div>
 
-      <div className="chapter">
-        <label className="chapter-label" htmlFor="chapter-2">Chapter II</label>
-        <div className="prompt">I acted through art today by ...</div>
+      <div className="entry-field">
+        <label className="sr-only" htmlFor="chapter-2">I acted through art today by</label>
         <textarea
           id="chapter-2"
-          className="input"
+          className="entry-input"
           rows={3}
           value={actedBy}
           onChange={e=>setActedBy(e.target.value)}
-          placeholder={'listening carefully, drawing with neighbors, archiving street sounds'}
+          placeholder={'I acted through art today by ...'}
         />
       </div>
 
       {error && <p className="error-text">{error}</p>}
 
-      <div style={{marginTop:10}}>
-        <button className="btn" type="submit" disabled={saving}>{saving ? 'Saving...' : 'Submit'}</button>
+      <div style={{marginTop:18}}>
+        <button className="entry-btn" type="submit" disabled={saving}>{saving ? 'Saving...' : 'ENTER'}</button>
       </div>
     </form>
   )
