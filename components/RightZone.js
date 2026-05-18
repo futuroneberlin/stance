@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export default function RightZone({ entries, onAdd }){
+export default function RightZone({ entries, onSubmit }){
   const [artIs, setArtIs] = useState('')
   const [actedBy, setActedBy] = useState('')
   const [error, setError] = useState('')
@@ -39,31 +39,10 @@ export default function RightZone({ entries, onAdd }){
       return
     }
 
-    const payloads = []
-    if(chapterOne){
-      const text = /^art is\b/i.test(chapterOne) ? chapterOne : `Art is ${chapterOne}`
-      payloads.push({ text, category: inferCategories(text), relations: inferRelations(text) })
-    }
-    if(chapterTwo){
-      const text = /^i acted through art today by\b/i.test(chapterTwo) ? chapterTwo : `I acted through art today by ${chapterTwo}`
-      payloads.push({ text, category: inferCategories(text), relations: inferRelations(text) })
-    }
-
     setSaving(true)
     try{
-      for(const payload of payloads){
-        const res = await fetch('/api/entries', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify(payload)
-        })
-        const data = await res.json()
-        const entry = data?.entry || data
-        if(entry && entry.id && entry.text){
-          onAdd && onAdd(entry)
-        }
-      }
-
+      // delegate to central pipeline
+      await Promise.resolve(onSubmit && onSubmit({ chapterOne, chapterTwo }))
       setArtIs('')
       setActedBy('')
     }catch(err){
@@ -114,14 +93,22 @@ export default function RightZone({ entries, onAdd }){
       {userEntries.length > 0 && (
         <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid #e8e8e8' }}>
           <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Your Contributions</div>
-          {userEntries.map((entry) => (
-            <div key={entry.id} style={{ fontSize: 12, lineHeight: 1.5, marginBottom: 8, padding: 8, background: '#fafafa', borderLeft: '3px solid #ffd700' }}>
-              <div>{entry.text.slice(0, 70)}...</div>
-              <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>
-                {(entry.category || []).join(' · ')}
+          {userEntries.map((entry) => {
+            const related = (entries || []).filter((e) => e.id !== entry.id && Array.isArray(e.category) && Array.isArray(entry.category) && e.category.some(c=>entry.category.includes(c)))
+            return (
+              <div key={entry.id} data-node-id={entry.id} style={{ fontSize: 13, lineHeight: 1.4, marginBottom: 12, padding: 12, background: '#fafafa', borderLeft: '3px solid #ffd700' }}>
+                <div style={{ fontWeight:600, marginBottom:6 }}>{entry.text}</div>
+                <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:8 }}>
+                  {(entry.category || []).map((c) => (
+                    <div key={c} style={{ background:'#fff', border:'1px solid #eee', padding:'4px 8px', fontSize:12, color:'#444' }}>{c}</div>
+                  ))}
+                </div>
+                <div style={{ fontSize:12, color:'#666' }}>
+                  Connections: {related.length} {related.length>0 && `· Related: ${related.slice(0,3).map(r=>r.text.slice(0,40)).join(' — ')}`}
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

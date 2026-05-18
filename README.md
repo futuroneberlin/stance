@@ -1,352 +1,71 @@
-# Art as Stance
+# Art as Stance — Architektur & Nutzerfluss
 
-## Overview
+Dieses Repository implementiert eine zweistufige User Journey und ein lebendes semantisches Archiv. Ziel ist, dass die Anwendung als dynamisches, relationales System erscheint — nicht als statisches Drei-Spalten-Mockup.
 
-**Art as Stance** is an evolving semantic system and living glossary that explores the questions:
+**Kernidee (kurz)**
+- Zwei-stufige Nutzerreise: Erst Teilnahme (Entry Screen), dann Verarbeitung & Netzwerkansicht.
+- Semantische Pipeline verarbeitet Beiträge, erzeugt Kategorien, Relationen und ähnliche Einträge.
+- Visualisierung verbindet externe (Internet) Daten, semantische Cluster und User-Beiträge zu einem vernetzten System.
 
-- **“Art is …”**
-- **“I acted through art today by …”**
+**Wesentliche Prinzipien**
+- Auf der ersten Seite (Entry Screen) sind ausschließlich: Titel, Beschreibung, zwei Eingabefelder und ein Submit-Button sichtbar.
+- Mindestens ein Feld muss ausgefüllt werden, bevor Submit akzeptiert wird.
+- Erst nach Submit startet die Verarbeitung (Anzeige einer Übergangsanimation / Processing-Overlay). Erst danach öffnet sich die vollständige Netzwerkansicht.
+- Externe Internetdaten werden nur nach Teilnahme geladen und erscheinen in der LEFT-Spalte.
 
-The project investigates how artistic meaning emerges through language, participation, external information, and collective interaction.
+## Zweistufige User Journey
 
-Instead of defining art as a fixed concept, the system continuously redefines and reorganizes artistic meaning through user input, relational structures, and internet-based data.
+1) Entry Screen (Seite 1)
+- Titel: ART AS STANCE
+- Beschreibung: A living glossary where language, participation and external data continuously reshape meaning.
+- Zwei Felder: `Art is …` und `I acted through art today by …`
+- Pflicht: Mindestens eines der beiden Felder muss ausgefüllt sein.
+- Button: Submit → zeigt Verarbeitung an und startet Pipeline.
 
-Each contribution changes the network.
+2) Network View (Seite 2)
+- Wird erst nach abgeschlossener (oder gestarteter) Verarbeitung sichtbar.
+- Besteht aus drei Bereichen: LEFT (Internetdaten), CENTER (semantische Cluster/Overlaps), RIGHT (User-Einträge & Archiv).
+- Visuelle Verbindungsebene (`SemanticOverlay`) zeichnet relationale Pfade zwischen Nodes als animierte SVG-Linien.
 
----
+## Semantische Verarbeitung (Pipeline)
 
-# Core Concept
+- Eingaben werden bereitgestellt an die zentrale Pipeline in `pages/index.js` → Analyse → Kategorie-Vorhersage → Relations-Extraktion → Embedding-Anfrage → Ähnlichkeitsberechnung → Link-Generierung.
+- Nach Erzeugung der Relationen werden `entries` und `simLinks` gesetzt, die die Visualisierung und Archivfunktionen antreiben.
 
-The platform creates a dynamic relationship between:
+## LEFT — Internetdaten
 
-- external digital knowledge
-- overlapping semantic relations
-- personal human input
+- Lädt externe Quellen (Wikipedia, Wikidata, ggf. Datamuse/OpenLibrary) erst nach Teilnahme.
+- Reagiert dynamisch auf neue Nutzereingaben und versucht, relevante externe Begriffe zu ziehen und anzuzeigen.
 
-The system is structured into three spatial and conceptual zones:
+## CENTER — Semantische Cluster
 
-| Zone | Description |
-|---|---|
-| LEFT | Internet-based data, external references, online semantic material |
-| CENTER | Intersections, overlaps, hybrid meanings, relational space |
-| RIGHT | User-generated entries, personal statements, analog experiences |
+- Visualisiert Overlaps, Brücken und Dichten mit D3-Force-Simulation.
+- Nutzt generierte Links (Similarity / Shared Categories) zur Cluster- und Pfad-Bildung.
 
-These three areas continuously influence one another and generate new semantic relations over time.
+## RIGHT — User Entries & Archiv
 
----
+- Zeigt tatsächliche User-Beiträge als strukturierte Nodes mit Kategorien, Verbindungen und Archiv-Informationen.
+- Erlaubt neue Beiträge auch aus der Hauptansicht heraus (delegiert an die zentrale Pipeline).
 
-# Main Questions
+## Visuelle Verbindungen
 
-The project is built around two open prompts:
+- `SemanticOverlay` rendert eine SVG-Ebene über dem Layout mit animierten, hover-aktiven Kurven zwischen Nodes.
+- Hover hebt Knoten und Pfade hervor und zeigt relationale Pfade.
 
-```text
-Art is ...
+## Entwicklungs-Hinweise
+
+- Dev-Start:
 ```
-
-```text
-I acted through art today by ...
-```
-
-Every answer becomes part of a growing semantic archive.
-
----
-
-# Input Categories
-
-User contributions are grouped into three conceptual categories:
-
-## Intrinsic
-
-Internal perception and subjective experience.
-
-Examples:
-- emotions
-- intuition
-- memory
-- identity
-- inner reflection
-
----
-
-## Extrinsic
-
-External systems and societal structures.
-
-Examples:
-- institutions
-- politics
-- economics
-- visibility
-- public interaction
-
----
-
-## Shared / Environmental
-
-Collective exchange and environmental relations.
-
-Examples:
-- dialogue
-- participation
-- ecology
-- networks
-- collaboration
-- spatial interaction
-
----
-
-# System Functions
-
-## 1. User Input System
-
-Users submit statements related to art, action, perception, or experience.
-
-Example:
-
-```text
-Art is collective memory.
-```
-
-```text
-I acted through art today by listening carefully.
-```
-
-The system stores and categorizes each entry.
-
----
-
-## 2. Semantic Categorization
-
-Inputs are analyzed and assigned to one or multiple conceptual categories:
-
-- intrinsic
-- extrinsic
-- shared/environmental
-
-Categorization may be based on:
-- semantic similarity
-- keyword relations
-- contextual meaning
-- AI-assisted analysis
-
----
-
-## 3. Dynamic Network Growth
-
-Every entry creates new semantic nodes and relations.
-
-The network evolves dynamically through:
-- repeated concepts
-- overlapping meanings
-- relational proximity
-- category intersections
-
-The structure is never static.
-
-New inputs continuously reshape the system.
-
----
-
-## 4. Internet Data Layer (LEFT)
-
-The left side of the system integrates external digital information.
-
-Possible sources include:
-- online archives
-- public datasets
-- internet text corpora
-- semantic databases
-- APIs
-- cultural references
-
-This layer continuously introduces external definitions and associations of art.
-
----
-
-## 5. Overlap Zone (CENTER)
-
-The center area represents semantic intersections between:
-- internet-derived information
-- user-generated inputs
-- recurring concepts
-- hybrid meanings
-
-This area visualizes:
-- overlaps
-- tensions
-- contradictions
-- shared structures
-
-It acts as the relational core of the system.
-
----
-
-## 6. Analog / Human Input Layer (RIGHT)
-
-The right side contains direct human contributions.
-
-This includes:
-- written reflections
-- personal experiences
-- subjective definitions
-- analog observations
-- participatory statements
-
-This layer prioritizes human interpretation over fixed classification.
-
----
-
-## 7. Diagram System
-
-The project includes a dynamic visualization system that continuously reorganizes relationships between:
-- concepts
-- categories
-- meanings
-- archives
-- user interactions
-- external semantic material
-
-The diagram evolves over time as new information enters the system.
-
----
-
-# Data Flow
-
-```text
-User Input
-    ↓
-Semantic Analysis
-    ↓
-Category Assignment
-    ↓
-Relation Generation
-    ↓
-Network Update
-    ↓
-Diagram Reorganization
-```
-
----
-
-# Example Entry Structure
-
-```json
-{
-  "id": "entry_001",
-  "text": "Art is collective memory",
-  "category": ["shared", "intrinsic"],
-  "timestamp": 1710000000,
-  "relations": ["memory", "community", "archive"]
-}
-```
-
----
-
-# Network Logic
-
-Nodes connect based on:
-- semantic similarity
-- conceptual overlap
-- repeated language patterns
-- shared categories
-- contextual relations
-- user participation frequency
-
-The network grows as a living semantic ecosystem.
-
----
-
-# Project Goals
-
-The project aims to create:
-
-- a living glossary of artistic meaning
-- a participatory semantic archive
-- a continuously evolving conceptual network
-- a bridge between human experience and digital information
-- a system where artistic meaning is never fixed
-
----
-
-# Technology
-
-## Frontend
-- Next.js
-- React
-- TypeScript
-
-## Visualization
-- D3.js / Three.js / Cytoscape.js
-
-## Styling
-- TailwindCSS
-
-## Deployment
-- Vercel
-
-## Optional AI / Semantic Tools
-- OpenAI API
-- embeddings
-- vector similarity
-- NLP pipelines
-
----
-
-# Installation
-
-```bash
 npm install
 npm run dev
 ```
+- API-Endpoints (beispielhaft): `/api/entries`, `/api/embeddings`, `/api/fetch-definitions`.
+- Lokale Persistenz: Eingaben können in `localStorage` markiert werden, werden aber nicht automatisch zur Umgehung des Entry Screens führen.
+
+## Ziel
+
+Die Anwendung soll wirken wie ein lebendes semantisches Archiv — dynamisch, relational und partizipativ — nicht wie ein statisches Dashboard.
 
 ---
 
-# Environment Variables
-
-```env
-OPENAI_API_KEY=
-```
-
----
-
-# Development
-
-Run local development server:
-
-```bash
-npm run dev
-```
-
-Build production version:
-
-```bash
-npm run build
-```
-
----
-
-# System Objective
-
-Art as Stance is not designed to produce fixed definitions of art.
-
-The system functions as a continuously evolving semantic environment where meaning emerges through interaction between:
-- users
-- language
-- external data
-- participation
-- collective interpretation
-
-Every contribution transforms the structure.
-
----
-
-# Live Project
-
-https://project-zp3zk.vercel.app/
-
----
-
-# License
-
-Experimental artistic research project.
-Open for conceptual development and collaborative expansion.
+Für detaillierte Architekturhinweise oder weitere Anpassungen (z. B. erweiterte NER, persistente Graph-DB, oder verbesserte Embeddings-Pipelines) schreibe mir kurz, dann implementiere ich die nächsten Schritte.
