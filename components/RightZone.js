@@ -1,32 +1,12 @@
 import { useState } from 'react'
 
-export default function RightZone({ entries, onSubmit }){
+export default function RightZone({ entries, onSubmit, categories = [], nodes = [], links = [] }){
   const [artIs, setArtIs] = useState('')
   const [actedBy, setActedBy] = useState('')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
   const userEntries = (entries || []).filter((e) => !e.source || !['wikipedia', 'wikidata', 'wiktionary', 'dbpedia'].includes(e.source))
-
-  function inferCategories(text){
-    const t = String(text || '').toLowerCase()
-    const cat = []
-    if(/memory|emotion|intuition|identity|reflection|inner|care|listen/.test(t)) cat.push('intrinsic')
-    if(/politic|econom|institution|public|city|market|system|media/.test(t)) cat.push('extrinsic')
-    if(/shared|network|community|dialogue|ecology|collab|collective|participation/.test(t)) cat.push('shared')
-    if(!cat.length) cat.push('shared')
-    return cat
-  }
-
-  function inferRelations(text){
-    const words = String(text || '')
-      .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, ' ')
-      .split(/\s+/)
-      .filter((w) => w.length > 4)
-    const unique = Array.from(new Set(words))
-    return unique.slice(0, 6)
-  }
 
   async function submit(e){
     e.preventDefault()
@@ -90,6 +70,20 @@ export default function RightZone({ entries, onSubmit }){
         </button>
       </form>
 
+      <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid #e8e8e8' }}>
+        <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Semantic State</div>
+        <div style={{ fontSize: 12, color: '#666', marginBottom: 8 }}>
+          Entries: {userEntries.length} · Nodes: {nodes.length} · Links: {links.length} · Categories: {categories.length}
+        </div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {(categories || []).slice(0, 10).map((category) => (
+            <span key={category.category_key} style={{ background:'#fff', border:'1px solid #eee', padding:'4px 8px', fontSize:12, color:'#444' }}>
+              {category.label}
+            </span>
+          ))}
+        </div>
+      </div>
+
       {userEntries.length > 0 && (
         <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid #e8e8e8' }}>
           <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Your Contributions</div>
@@ -109,6 +103,19 @@ export default function RightZone({ entries, onSubmit }){
               </div>
             )
           })}
+        </div>
+      )}
+
+      {nodes.length > 0 && (
+        <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid #e8e8e8' }}>
+          <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Generated Nodes</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {nodes.slice(0, 14).map((node) => (
+              <span key={node.node_id} style={{ fontSize: 11, padding: '4px 8px', background: '#fafafa', border: '1px solid #eee' }}>
+                {node.label}
+              </span>
+            ))}
+          </div>
         </div>
       )}
     </div>

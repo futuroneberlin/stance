@@ -1,68 +1,62 @@
+import { getSupabaseAdmin } from '../../lib/supabaseAdmin'
 import fs from 'fs'
 import path from 'path'
-import { createClient } from '@supabase/supabase-js'
-
-const dataFile = path.resolve(process.cwd(), 'data', 'network.json')
-
-function readNetwork(){
-  try{
-    const raw = fs.readFileSync(dataFile,'utf8')
-    return JSON.parse(raw)
-  }catch(e){
-    return { links: [] }
-  }
-}
-
-function writeNetwork(payload){
-  try{
-    fs.writeFileSync(dataFile, JSON.stringify(payload, null, 2), 'utf8')
-    return true
-  }catch(e){
-    return false
-  }
-}
-
-let supabase = null
-if(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY){
-  supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
-}
 
 export default async function handler(req, res){
-  if(req.method === 'GET'){
-    if(supabase){
-      try{
-        const { data, error } = await supabase.from('links').select('*')
-        if(error) throw error
-        return res.status(200).json(data)
-      }catch(e){
-        const net = readNetwork()
-        return res.status(200).json(net.links || [])
-      }
+  let supabase
+  try{
+    supabase = getSupabaseAdmin()
+  }catch(e){
+    if(process.env.NODE_ENV !== 'development'){
+      return res.status(500).json({ error: 'Supabase is not configured. Please set SUPABASE_URL and SUPABASE_SERVICE_KEY.' })
     }
-    const net = readNetwork()
-    return res.status(200).json(net.links || [])
+    const fp = path.join(process.cwd(), 'data', 'network.json')
+    if(req.method === 'GET'){
+      try{ const txt = fs.readFileSync(fp,'utf8'); return res.status(200).json(JSON.parse(txt||'[]')) }catch(e){ return res.status(200).json([]) }
+    }
+    if(req.method === 'POST'){
+      const body = req.body || {}
+      const links = Array.isArray(body.links)? body.links: []
+      try{ fs.writeFileSync(fp, JSON.stringify(links,null,2),'utf8'); return res.status(200).json({ ok:true, count: links.length, supabase:false }) }catch(e){ return res.status(500).json({ error:'local network write failed' }) }
+    }
+    return res.status(500).json({ error: 'Supabase is not configured. Please set SUPABASE_URL and SUPABASE_SERVICE_KEY.' })
+  }
+
+  if(req.method === 'GET'){
+    const { data, error } = await supabase
+      .from('links')
+      .select('source_node_id,target_node_id,weight,relation_type')
+      .eq('relation_type', 'semantic_similarity')
+    if(error) return res.status(500).json({ error: 'links fetch failed', detail: error.message })
+    const links = (data || []).map((row) => ({
+      source: row.source_node_id,
+      target: row.target_node_id,
+      weight: Number(row.weight || 0),
+      relationType: row.relation_type
+    }))
+    return res.status(200).json(links)
   }
 
   if(req.method === 'POST'){
     const body = req.body || {}
     const links = Array.isArray(body.links) ? body.links : []
+    // replace semantic-similarity projection to keep a stable graph snapshot
+    const del = await supabase.from('links').delete().eq('relation_type', 'semantic_similarity')
+    if(del.error) return res.status(500).json({ error: 'links cleanup failed', detail: del.error.message })
 
-    if(supabase){
-      try{
-        // upsert links into supabase table 'links' with fields: source, target, weight
-        // clear and insert for simplicity
-        await supabase.from('links').delete()
-        if(links.length) await supabase.from('links').insert(links.map(l=>({ source: l.source, target: l.target, weight: l.weight || 0 })))
-        return res.status(200).json({ ok:true, supabase:true })
-      }catch(e){
-        console.error('supabase network save error', e.message||e)
-        // fallback to file
-      }
+    const payload = links.map((l) => ({
+      source_node_id: l.source,
+      target_node_id: l.target,
+      relation_type: 'semantic_similarity',
+      weight: Number(l.weight || 0)
+    }))
+
+    if(payload.length > 0){
+      const ins = await supabase.from('links').insert(payload)
+      if(ins.error) return res.status(500).json({ error: 'links insert failed', detail: ins.error.message })
     }
 
-    const ok = writeNetwork({ links })
-    if(!ok) return res.status(500).json({ ok:false, error: 'could not write network file' })
-    return res.status(200).json({ ok:true })
+    return res.status(200).json({ ok:true, count: payload.length, supabase:true })
   }
 
   res.setHeader('Allow', 'GET,POST')

@@ -1,25 +1,27 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import * as d3 from 'd3'
 import ArchiveView from './ArchiveView'
 
-export default function CenterZone({ entries, links = [] }){
+export default function CenterZone({ entries, links = [], categories = [], nodes: persistedNodes = [] }){
   const ref = useRef(null)
+
+  const categoryTags = useMemo(() => (Array.isArray(categories) ? categories : []).slice(0, 12), [categories])
 
   useEffect(()=>{
     if(!entries || !ref.current) return
     const cleanEntries = (entries || []).filter((e) => e && e.id && e.text)
-    const nodes = cleanEntries.map(e=>({ id:e.id, text:e.text, category:e.category || [], source: e.source }))
-    if(!nodes.length){
+    const graphNodes = cleanEntries.map(e=>({ id:e.id, text:e.text, category:e.category || [], source: e.source }))
+    if(!graphNodes.length){
       d3.select(ref.current).selectAll('*').remove()
       return
     }
-    const links = []
-    for(let i=0;i<nodes.length;i++){
-      for(let j=i+1;j<nodes.length;j++){
+    const categoryLinks = []
+    for(let i=0;i<graphNodes.length;i++){
+      for(let j=i+1;j<graphNodes.length;j++){
         const a = cleanEntries[i]
         const b = cleanEntries[j]
         const sharedCat = a.category && b.category && a.category.filter(x=>b.category.includes(x))
-        if(sharedCat && sharedCat.length) links.push({ source:a.id, target:b.id })
+        if(sharedCat && sharedCat.length) categoryLinks.push({ source:a.id, target:b.id })
       }
     }
 
@@ -28,15 +30,14 @@ export default function CenterZone({ entries, links = [] }){
     const svg = d3.select(ref.current)
       .attr('viewBox', `0 0 ${width} ${height}`)
 
-    const sim = d3.forceSimulation(nodes)
-      .force('link', d3.forceLink(links).id(d=>d.id).distance(60))
+    const sim = d3.forceSimulation(graphNodes)
+      .force('link', d3.forceLink(categoryLinks).id(d=>d.id).distance(60))
       .force('charge', d3.forceManyBody().strength(-80))
       .force('center', d3.forceCenter(width/2, height/2))
 
-    // merge with similarity links provided via props
-    const simLinks = links || []
-    const mergedLinks = [...links]
-    for(const s of simLinks){
+    const propLinks = Array.isArray(links) ? links : []
+    const mergedLinks = [...categoryLinks]
+    for(const s of propLinks){
       // avoid duplicates
       if(!mergedLinks.find(l=> (l.source===s.source && l.target===s.target) || (l.source===s.target && l.target===s.source) )){
         mergedLinks.push(s)
@@ -48,7 +49,8 @@ export default function CenterZone({ entries, links = [] }){
       .attr('stroke-dasharray', d=> d.weight ? '0' : '4 6')
       .style('transition','stroke-width 0.25s, stroke-opacity 0.25s')
 
-    const node = svg.append('g').selectAll('g.node').data(nodes).enter().append('g').attr('class','node').attr('data-node-id', d=>d.id)
+    const nodeData = Array.isArray(persistedNodes) && persistedNodes.length ? persistedNodes : graphNodes
+    const node = svg.append('g').selectAll('g.node').data(nodeData).enter().append('g').attr('class','node').attr('data-node-id', d=>d.id)
     node.append('circle')
       .attr('r',8)
       .attr('fill',(d)=> d.source ? '#e8e8e8' : '#ffd700')
@@ -75,12 +77,24 @@ export default function CenterZone({ entries, links = [] }){
     })
 
     return ()=> sim.stop()
-  },[entries])
+  },[entries, links])
 
   return (
     <div className="zone-content">
       <div className="zone-label">CENTER</div>
       <p className="zone-intro">Overlaps, tensions and hybrid meanings in a shared relational core.</p>
+      {categoryTags.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, margin: '0 0 10px' }}>
+          {categoryTags.map((category) => (
+            <span key={category.category_key} style={{ fontSize: 11, padding: '4px 8px', background: '#fff', border: '1px solid #eee' }}>
+              {category.label} · {category.usage_count}
+            </span>
+          ))}
+        </div>
+      )}
+      {Array.isArray(persistedNodes) && persistedNodes.length > 0 && (
+        <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>Persisted nodes: {persistedNodes.length}</div>
+      )}
       <svg ref={ref} style={{width:'100%',height:'auto',aspectRatio:'1',marginTop:12,minHeight:360,border:'1px solid #e8e8e8'}} />
       <div style={{marginTop:10}}>
         <ArchiveView entries={entries} />
