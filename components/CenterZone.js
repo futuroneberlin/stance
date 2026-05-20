@@ -30,26 +30,46 @@ export default function CenterZone({ entries, links = [], categories = [], nodes
     const svg = d3.select(ref.current)
       .attr('viewBox', `0 0 ${width} ${height}`)
 
-    const sim = d3.forceSimulation(graphNodes)
-      .force('link', d3.forceLink(categoryLinks).id(d=>d.id).distance(60))
+    // decide which nodes to render: prefer persistedNodes if available
+    const nodeData = Array.isArray(persistedNodes) && persistedNodes.length ? persistedNodes : graphNodes
+
+    // normalize and merge external prop links with category links, dedupe and filter
+    const propLinks = Array.isArray(links) ? links : []
+    const normalizeLink = (l) => {
+      if(!l) return null
+      const s = l.source && typeof l.source === 'object' ? (l.source.id || l.source) : l.source
+      const t = l.target && typeof l.target === 'object' ? (l.target.id || l.target) : l.target
+      if(!s || !t) return null
+      return { source: String(s), target: String(t), weight: l.weight }
+    }
+
+    const normalizedPropLinks = propLinks.map(normalizeLink).filter(Boolean)
+
+    // start from categoryLinks but normalize to strings
+    const normalizedCategoryLinks = categoryLinks.map(l=>({ source: String(l.source), target: String(l.target) }))
+
+    const mergedRaw = [...normalizedCategoryLinks]
+    for(const pl of normalizedPropLinks){
+      const dup = mergedRaw.find(l=> (l.source===pl.source && l.target===pl.target) || (l.source===pl.target && l.target===pl.source))
+      if(!dup) mergedRaw.push(pl)
+    }
+
+    // create a set of valid node ids from nodeData
+    const validNodeIds = new Set((nodeData||[]).map(n => String(n.id)))
+
+    // filter merged links to only those where both endpoints exist in nodeData
+    const mergedLinks = mergedRaw.filter(l => validNodeIds.has(String(l.source)) && validNodeIds.has(String(l.target)))
+
+    const sim = d3.forceSimulation(nodeData)
+      .force('link', d3.forceLink(mergedLinks).id(d=>d.id).distance(60))
       .force('charge', d3.forceManyBody().strength(-80))
       .force('center', d3.forceCenter(width/2, height/2))
-
-    const propLinks = Array.isArray(links) ? links : []
-    const mergedLinks = [...categoryLinks]
-    for(const s of propLinks){
-      // avoid duplicates
-      if(!mergedLinks.find(l=> (l.source===s.source && l.target===s.target) || (l.source===s.target && l.target===s.source) )){
-        mergedLinks.push(s)
-      }
-    }
 
     const link = svg.append('g').selectAll('line').data(mergedLinks).enter().append('line')
       .attr('stroke','#cfcfcf').attr('stroke-opacity',0.6).attr('stroke-width',d=> d.weight ? (1 + (d.weight-0.12)*6) : 1.2)
       .attr('stroke-dasharray', d=> d.weight ? '0' : '4 6')
       .style('transition','stroke-width 0.25s, stroke-opacity 0.25s')
 
-    const nodeData = Array.isArray(persistedNodes) && persistedNodes.length ? persistedNodes : graphNodes
     const node = svg.append('g').selectAll('g.node').data(nodeData).enter().append('g').attr('class','node').attr('data-node-id', d=>d.id)
     node.append('circle')
       .attr('r',8)
@@ -72,7 +92,10 @@ export default function CenterZone({ entries, links = [], categories = [], nodes
     link.attr('stroke-dashoffset', 1000).transition().duration(900).attr('stroke-dashoffset',0)
 
     sim.on('tick', ()=>{
-      link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y)
+      link.attr('x1',d=> (d.source && d.source.x != null) ? d.source.x : 0)
+          .attr('y1',d=> (d.source && d.source.y != null) ? d.source.y : 0)
+          .attr('x2',d=> (d.target && d.target.x != null) ? d.target.x : 0)
+          .attr('y2',d=> (d.target && d.target.y != null) ? d.target.y : 0)
       node.attr('transform', d=>`translate(${d.x},${d.y})`)
     })
 

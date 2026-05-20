@@ -124,6 +124,28 @@ export default function Home(){
         }
       }
 
+      // verify insertion succeeded by reloading persisted entries
+      try{
+        const persisted = await loadEntries()
+        if(Array.isArray(persisted)){
+          // ensure saved entries appear in persisted list; merge if necessary
+          const byId = new Map(persisted.map((e)=>[String(e.id), e]))
+          for(const se of savedEntries){ if(se && se.id) byId.set(String(se.id), se) }
+          const merged = Array.from(byId.values())
+          setEntries(merged)
+        }
+      }catch(e){
+        console.warn('Failed to reload entries after save', e)
+        // fallback: include saved entries into current state
+        if(savedEntries.length){
+          setEntries((prev)=>{
+            const byId = new Map((Array.isArray(prev)?prev:[]).map(e=>[String(e.id), e]))
+            for(const se of savedEntries){ if(se && se.id) byId.set(String(se.id), se) }
+            return Array.from(byId.values())
+          })
+        }
+      }
+
       setProcessingMessage('Fetching external references...')
       // fetch external internet data
       const defRes = await fetch('/api/fetch-definitions')
