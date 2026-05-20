@@ -22,10 +22,16 @@ export default function Home(){
   const [transform, setTransform] = useState({ x: 0, y: 0, k: 1 })
 
   useEffect(()=>{
-    // Clear legacy entry-state keys so the first screen is always shown on fresh load.
+    // Restore the archive view if the user already entered it in this browser session.
+    try{
+      if(localStorage.getItem('stance-journey') === '1'){
+        setSubmitted(true)
+      }
+    }catch(e){}
+
+    // Clear only the old legacy key so the first screen still works on a fresh visit.
     try{
       localStorage.removeItem('entered')
-      localStorage.removeItem('stance-journey')
     }catch(e){}
   },[])
 
@@ -170,7 +176,7 @@ export default function Home(){
       setTimeout(()=>{
         setRevealing(false)
         setSubmitted(true)
-        if(persistEntered){ try{ localStorage.setItem('stance-journey','1') }catch(e){} }
+        try{ localStorage.setItem('stance-journey','1') }catch(e){}
       }, 1200)
 
     }catch(err){
@@ -221,7 +227,7 @@ export default function Home(){
                   <CenterZone entries={entries} links={links.length ? links : simLinks} categories={categories} nodes={nodes} />
                 </div>
                 <div className="zone-column zone-right">
-                  <RightZone entries={entries} onSubmit={handleSubmit} categories={categories} nodes={nodes} links={links} />
+                  <RightZone submitted={submitted} entries={entries} onSubmit={handleSubmit} categories={categories} nodes={nodes} links={links} />
                 </div>
               </div>
             </div>
