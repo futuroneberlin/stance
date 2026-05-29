@@ -449,15 +449,26 @@ export default function CenterZone({ entries, links = [], categories = [], nodes
       )}
 
       <div className="cell-stage">
-        <div className="cell-stage__halo cell-stage__halo--one" />
-        <div className="cell-stage__halo cell-stage__halo--two" />
-        <div ref={threeRef} className="cell-network-webgl" style={{position:'absolute',inset:0,zIndex:1}} />
-        <svg ref={ref} className="cell-network-svg" />
+        <div className="cell-stage__background">
+          <div className="cell-stage__halo cell-stage__halo--one" />
+          <div className="cell-stage__halo cell-stage__halo--two" />
+          <div className="cell-stage__grid" />
+        </div>
 
-        <div className="cell-nucleus">
-          <div className="cell-nucleus__kicker">ART IS</div>
-          <div className="cell-nucleus__title">Art is</div>
-          <div className="cell-nucleus__sub">{nucleusText}</div>
+        <div className="cell-stage__shader">
+          <div ref={threeRef} className="cell-network-webgl" />
+        </div>
+
+        <div className="cell-stage__network">
+          <svg ref={ref} className="cell-network-svg" />
+        </div>
+
+        <div className="cell-stage__ui">
+          <div className="cell-nucleus">
+            <div className="cell-nucleus__kicker">ART IS</div>
+            <div className="cell-nucleus__title">Art is</div>
+            <div className="cell-nucleus__sub">{nucleusText}</div>
+          </div>
         </div>
       </div>
 
