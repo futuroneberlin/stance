@@ -1,274 +1,117 @@
 import { useEffect, useState } from 'react'
-import LeftZone from '../components/LeftZone'
-import CenterZone from '../components/CenterZone'
-import RightZone from '../components/RightZone'
 import EntryForm from '../components/EntryForm'
-import RevealTransition from '../components/RevealTransition'
-import ProcessingOverlay from '../components/ProcessingOverlay'
-import SemanticOverlay from '../components/SemanticOverlay'
-import { loadEntries, loadNetwork, loadCategories, loadNodes, loadLinks, saveCategories, saveEntry, saveLinks, saveNetwork, saveNodes } from '../lib/persistence'
-import { buildSemanticArtifacts } from '../lib/semanticPipeline'
+
+const STORAGE_KEY = 'stance-local-entries'
+
+function readStoredEntries(){
+  if(typeof window === 'undefined') return []
+  try{
+    const raw = window.localStorage.getItem(STORAGE_KEY)
+    const parsed = raw ? JSON.parse(raw) : []
+    return Array.isArray(parsed) ? parsed : []
+  }catch(err){
+    console.error('Failed to read local entries', err)
+    return []
+  }
+}
+
+function writeStoredEntries(entries){
+  if(typeof window === 'undefined') return
+  try{
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(entries))
+  }catch(err){
+    console.error('Failed to store local entries', err)
+  }
+}
+
+function formatTimestamp(timestamp){
+  if(!timestamp) return ''
+  const value = Number(timestamp)
+  if(Number.isNaN(value)) return ''
+  const date = new Date(value < 1e12 ? value * 1000 : value)
+  return new Intl.DateTimeFormat('en-GB', {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  }).format(date)
+}
+
+function normalizeEntryText(text){
+  const trimmed = String(text || '').trim()
+  if(!trimmed) return ''
+  return /^art is\b/i.test(trimmed)
+    ? trimmed
+    : `Art is ${trimmed}`
+}
 
 export default function Home(){
   const [entries, setEntries] = useState([])
-  const [archiveEntries, setArchiveEntries] = useState([])
-  const [archiveLoading, setArchiveLoading] = useState(false)
-  const [archiveError, setArchiveError] = useState('')
-  const [nodes, setNodes] = useState([])
-  const [categories, setCategories] = useState([])
-  const [links, setLinks] = useState([])
   const [submitted, setSubmitted] = useState(false)
-  const [revealing, setRevealing] = useState(false)
-  const [processing, setProcessing] = useState(false)
-  const [processingMessage, setProcessingMessage] = useState('')
-  const [simLinks, setSimLinks] = useState([])
-  const [transform, setTransform] = useState({ x: 0, y: 0, k: 1 })
+  const [hydrated, setHydrated] = useState(false)
 
   useEffect(()=>{
-    // Exhibition Mode always starts on Page 1.
-    try{ localStorage.removeItem('entered') }catch(e){}
-    try{ localStorage.removeItem('stance-journey') }catch(e){}
+    const storedEntries = readStoredEntries()
+    setEntries(storedEntries)
+    setSubmitted(storedEntries.length > 0)
+    setHydrated(true)
   },[])
 
-  // Do NOT load remote or internet-derived data on initial page load.
-  // Only fetch remote data when the user has passed the entry screen (submitted === true).
   useEffect(()=>{
-    if(!submitted) return
-    let mounted = true
-    async function load(){
-      setArchiveLoading(true)
-      setArchiveError('')
-      try{
-        const remoteData = await loadEntries()
-        if(Array.isArray(remoteData) && mounted){
-          setArchiveEntries(remoteData)
-          setEntries(remoteData)
-        }
+    if(!hydrated) return
+    writeStoredEntries(entries)
+  },[entries, hydrated])
 
-        const persistedLinks = await loadNetwork()
-        if(Array.isArray(persistedLinks) && mounted){
-          setSimLinks(persistedLinks)
-        }
-
-        const persistedCategories = await loadCategories()
-        if(Array.isArray(persistedCategories) && mounted){
-          setCategories(persistedCategories)
-        }
-
-        const persistedNodes = await loadNodes()
-        if(Array.isArray(persistedNodes) && mounted){
-          setNodes(persistedNodes)
-        }
-
-        const persistedGraphLinks = await loadLinks()
-        if(Array.isArray(persistedGraphLinks) && mounted){
-          setLinks(persistedGraphLinks)
-        }
-
-        const defRes = await fetch('/api/fetch-definitions')
-        const defData = await defRes.json()
-        if(defData.ok && Array.isArray(defData.entries) && mounted){
-          setEntries((prev) => {
-            const existing = Array.isArray(prev) ? prev : []
-            const merged = [...existing, ...defData.entries]
-            const seen = new Set(existing.map((e) => e.id))
-            return merged.filter((e) => {
-              if(seen.has(e.id)) return false
-              seen.add(e.id)
-              return true
-            })
-          })
-        }
-      }catch(err){
-        console.error('Load error:', err)
-        if(mounted){
-          setArchiveError('Failed to load archived entries.')
-        }
-      }finally{
-        if(mounted){
-          setArchiveLoading(false)
-        }
-      }
-    }
-
-    load()
-    return ()=>{ mounted = false }
-  },[submitted])
-
-  // central pipeline: handle raw submit from EntryForm
   async function handleSubmit({ chapterTwo }){
-    // start processing
-    setProcessing(true)
-    setProcessingMessage('Saving your contribution...')
-    setArchiveError('')
+    const text = normalizeEntryText(chapterTwo)
+    if(!text) return
 
-    try{
-      localStorage.removeItem('entered')
-      localStorage.removeItem('stance-journey')
-    }catch(e){}
-
-    const payloads = []
-    if(chapterTwo && chapterTwo.trim()){
-      const text = /^i acted through art today by\b/i.test(chapterTwo) ? chapterTwo.trim() : `I acted through art today by ${chapterTwo.trim()}`
-      payloads.push({ text })
+    const entry = {
+      id: `entry_${Date.now()}`,
+      text,
+      timestamp: Math.floor(Date.now() / 1000),
+      source: 'user',
+      is_seed: false,
+      is_visible: true,
+      category: [],
+      relations: []
     }
 
-    const savedEntries = []
-    try{
-      // save each entry via API
-      for(const p of payloads){
-        setProcessingMessage('Saving contribution...')
-        try{
-          const entry = await saveEntry(p.text)
-          if(entry && entry.id) savedEntries.push(entry)
-        }catch(e){
-          console.error('saveEntry failed', e)
-        }
-      }
-
-      if(!savedEntries.length){
-        throw new Error('No entry was returned from the save operation.')
-      }
-
-      // verify insertion succeeded by reloading persisted entries
-      const persisted = await loadEntries()
-      if(!Array.isArray(persisted)){
-        throw new Error('Archive retrieval did not return a list.')
-      }
-
-      const persistedById = new Map(persisted.map((e)=>[String(e.id), e]))
-      for(const se of savedEntries){ if(se && se.id) persistedById.set(String(se.id), se) }
-      const persistedMerged = Array.from(persistedById.values())
-      const savedIds = new Set(savedEntries.map((e)=>String(e.id)))
-      const verified = persistedMerged.some((entry) => savedIds.has(String(entry.id)))
-      if(!verified){
-        throw new Error('Saved entry could not be verified in archive retrieval.')
-      }
-
-      setArchiveEntries(persistedMerged)
-      setEntries(persistedMerged)
-
-      setProcessingMessage('Fetching external references...')
-      // fetch external internet data
-      const defRes = await fetch('/api/fetch-definitions')
-      const defData = await defRes.json()
-      const external = (defData && defData.entries) ? defData.entries : []
-
-      // request embeddings from server (OpenAI if configured, otherwise local fallback)
-      const semanticMerged = [...(entries || []), ...savedEntries, ...external]
-      const byId = new Map()
-      for(const e of semanticMerged){ if(e && e.id) byId.set(e.id, e) }
-      const all = Array.from(byId.values())
-
-      const embedReqItems = all.map((e)=>({ id: e.id, text: e.text }))
-      let embedResp = { ok:false, embeddings: {} }
-      try{
-        const r = await fetch('/api/embeddings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ items: embedReqItems }) })
-        embedResp = await r.json()
-      }catch(e){ console.error('embed request failed', e) }
-
-      const embeddings = embedResp.embeddings || {}
-      const artifacts = buildSemanticArtifacts(all, embeddings)
-      const semanticEntries = artifacts.entries
-      const simLinks = artifacts.similarityLinks
-
-      // attach similarity links to state for visualization and persist them
-      setProcessingMessage('Connecting overlaps and clusters...')
-      setEntries(semanticEntries.map((e)=>({ ...e })))
-      setSimLinks(simLinks)
-      setCategories(artifacts.categoryPayload)
-      setNodes(artifacts.nodePayload)
-      setLinks(artifacts.graphLinks)
-
-      // materialize semantic graph artifacts for persistent storage
-      // persist graph data in Supabase
-      try{
-        await saveCategories(artifacts.categoryPayload)
-        await saveNodes(artifacts.nodePayload)
-        await saveLinks(artifacts.graphLinks)
-        await saveNetwork(simLinks)
-      }catch(e){ console.error('persist network failed', e) }
-
-      // brief pause to show progression
-      await new Promise((r)=>setTimeout(r, 600))
-
-      // cinematic reveal
-      setProcessing(false)
-      setRevealing(true)
-      setTimeout(()=>{
-        setRevealing(false)
-        setSubmitted(true)
-      }, 1200)
-
-    }catch(err){
-      console.error('processing error', err)
-      setArchiveError(err?.message || 'Failed to persist archive entry.')
-      setProcessing(false)
-      // fallback: reveal anyway but keep entries
-      setSubmitted(true)
-    }
+    const nextEntries = [entry, ...entries.filter((item) => item && item.id !== entry.id)]
+    setEntries(nextEntries)
+    setSubmitted(true)
+    writeStoredEntries(nextEntries)
   }
+
+  const latestEntry = entries[0] || null
+  const archiveEntries = entries.slice(1)
 
   return (
     <div className="container-full">
       {!submitted ? (
         <div className="entry-screen">
           <EntryForm onSubmit={handleSubmit} />
-
-          {processing && (
-            <ProcessingOverlay steps={["Saving your contribution...","Analyzing semantics...","Fetching external references...","Building semantic relations...","Connecting overlaps and clusters..."]} active={processing} />
-          )}
-
-              {revealing && (
-                <RevealTransition
-                  entries={entries}
-                  onComplete={() => {
-                    setRevealing(false)
-                    setSubmitted(true)
-                  }}
-                />
-              )}
         </div>
       ) : (
-        <>
-          <div className="hero">
-            <div>
-              <h1 className="hero-title">ART AS STANCE</h1>
-              <p className="hero-subtitle">A living glossary where language, participation and external data continuously reshape meaning.</p>
+        <div style={{ maxWidth: 760, margin: '0 auto', padding: '56px 0' }}>
+          {latestEntry && (
+            <div style={{ marginBottom: 24, padding: 18, background: '#fff', border: '1px solid #e8e8e8' }}>
+              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Submitted entry</div>
+              <div style={{ fontSize: 16, lineHeight: 1.5 }}>{latestEntry.text}</div>
+              <div style={{ fontSize: 12, color: '#666', marginTop: 8 }}>{formatTimestamp(latestEntry.timestamp)}</div>
             </div>
-            <a className="live-link" href="https://github.com/futuroneberlin/stance" target="_blank" rel="noreferrer">Code</a>
-          </div>
+          )}
 
-          <div style={{ position: 'relative' }}>
-            <div className="zones-wrapper" style={{ transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.k})`, transformOrigin: '0 0' }}>
-              <div className="zones-layout">
-                <div className="zone-column zone-left">
-                  <LeftZone entries={entries} />
+          <div style={{ padding: 18, background: '#fff', border: '1px solid #e8e8e8' }}>
+            <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 12 }}>Archive</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {archiveEntries.map((entry) => (
+                <div key={entry.id} style={{ padding: 12, background: '#fafafa', borderLeft: '3px solid #ffd700' }}>
+                  <div style={{ fontSize: 14, lineHeight: 1.5 }}>{entry.text}</div>
+                  <div style={{ fontSize: 12, color: '#666', marginTop: 6 }}>{formatTimestamp(entry.timestamp)}</div>
                 </div>
-                <div className="zone-column zone-center">
-                  <CenterZone entries={entries} links={links.length ? links : simLinks} categories={categories} nodes={nodes} />
-                </div>
-                <div className="zone-column zone-right">
-                  <RightZone
-                    submitted={submitted}
-                    entries={archiveEntries.length ? archiveEntries : entries}
-                    archiveEntries={archiveEntries}
-                    archiveLoading={archiveLoading}
-                    archiveError={archiveError}
-                    onSubmit={handleSubmit}
-                    categories={categories}
-                    nodes={nodes}
-                    links={links}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div style={{ position:'absolute', inset:0, pointerEvents:'none' }}>
-              <SemanticOverlay links={simLinks} transform={transform} onTransform={(updater)=> setTransform(prev => typeof updater === 'function' ? updater(prev) : updater)} />
+              ))}
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   )

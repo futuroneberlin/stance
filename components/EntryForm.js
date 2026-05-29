@@ -30,15 +30,20 @@ export default function EntryForm({ onSubmit }){
 
   return (
     <form onSubmit={submit} className="entry-screen-form">
+      <div className="entry-header">
+        <div className="entry-kicker">ART IS</div>
+        <h1 className="entry-title">Set the center.</h1>
+        <p className="entry-subtitle">Write the nucleus of the cell.</p>
+      </div>
       <div className="entry-field">
-        <label className="sr-only" htmlFor="chapter-2">I acted through art today by</label>
+        <label className="sr-only" htmlFor="chapter-2">Art is</label>
         <textarea
           id="chapter-2"
           className="entry-input"
           rows={3}
           value={actedBy}
           onChange={e=>setActedBy(e.target.value)}
-          placeholder={'I acted through art today by ...'}
+          placeholder={'Art is ...'}
         />
       </div>
 
