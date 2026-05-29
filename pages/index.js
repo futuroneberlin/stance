@@ -22,17 +22,9 @@ export default function Home(){
   const [transform, setTransform] = useState({ x: 0, y: 0, k: 1 })
 
   useEffect(()=>{
-    // Restore the archive view if the user already entered it in this browser session.
-    try{
-      if(localStorage.getItem('stance-journey') === '1'){
-        setSubmitted(true)
-      }
-    }catch(e){}
-
-    // Clear only the old legacy key so the first screen still works on a fresh visit.
-    try{
-      localStorage.removeItem('entered')
-    }catch(e){}
+    // Exhibition Mode always starts on Page 1.
+    try{ localStorage.removeItem('entered') }catch(e){}
+    try{ localStorage.removeItem('stance-journey') }catch(e){}
   },[])
 
   // Do NOT load remote or internet-derived data on initial page load.
@@ -91,7 +83,7 @@ export default function Home(){
   },[submitted])
 
   // central pipeline: handle raw submit from EntryForm
-  async function handleSubmit({ chapterOne, chapterTwo }){
+  async function handleSubmit({ chapterTwo }){
     // start processing
     setProcessing(true)
     setProcessingMessage('Saving your contribution...')
@@ -102,10 +94,6 @@ export default function Home(){
     }catch(e){}
 
     const payloads = []
-    if(chapterOne && chapterOne.trim()){
-      const text = /^art is\b/i.test(chapterOne) ? chapterOne.trim() : `Art is ${chapterOne.trim()}`
-      payloads.push({ text })
-    }
     if(chapterTwo && chapterTwo.trim()){
       const text = /^i acted through art today by\b/i.test(chapterTwo) ? chapterTwo.trim() : `I acted through art today by ${chapterTwo.trim()}`
       payloads.push({ text })
@@ -193,12 +181,9 @@ export default function Home(){
       // cinematic reveal
       setProcessing(false)
       setRevealing(true)
-      // persist 'entered' only if we actually saved user entries
-      const persistEntered = savedEntries.length > 0
       setTimeout(()=>{
         setRevealing(false)
         setSubmitted(true)
-        try{ localStorage.setItem('stance-journey','1') }catch(e){}
       }, 1200)
 
     }catch(err){
