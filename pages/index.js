@@ -1,7 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import EntryForm from '../components/EntryForm'
+import CenterZone from '../components/CenterZone'
+import BottomDataChannel from '../components/BottomDataChannel'
+import seedEntriesData from '../data/entries.json'
+import categoriesData from '../data/categories.json'
+import nodesData from '../data/nodes.json'
+import linksData from '../data/links.json'
 
 const STORAGE_KEY = 'stance-local-entries'
+
+const seedEntries = Array.isArray(seedEntriesData)
+  ? seedEntriesData.filter((entry) => entry && entry.is_seed !== false)
+  : []
 
 function readStoredEntries(){
   if(typeof window === 'undefined') return []
@@ -24,6 +34,14 @@ function writeStoredEntries(entries){
   }
 }
 
+function normalizeEntryText(text){
+  const trimmed = String(text || '').trim()
+  if(!trimmed) return ''
+  return /^art is\b/i.test(trimmed)
+    ? trimmed
+    : `Art is ${trimmed}`
+}
+
 function formatTimestamp(timestamp){
   if(!timestamp) return ''
   const value = Number(timestamp)
@@ -35,30 +53,22 @@ function formatTimestamp(timestamp){
   }).format(date)
 }
 
-function normalizeEntryText(text){
-  const trimmed = String(text || '').trim()
-  if(!trimmed) return ''
-  return /^art is\b/i.test(trimmed)
-    ? trimmed
-    : `Art is ${trimmed}`
-}
-
 export default function Home(){
-  const [entries, setEntries] = useState([])
+  const [userEntries, setUserEntries] = useState([])
   const [submitted, setSubmitted] = useState(false)
   const [hydrated, setHydrated] = useState(false)
 
   useEffect(()=>{
     const storedEntries = readStoredEntries()
-    setEntries(storedEntries)
+    setUserEntries(storedEntries)
     setSubmitted(storedEntries.length > 0)
     setHydrated(true)
   },[])
 
   useEffect(()=>{
     if(!hydrated) return
-    writeStoredEntries(entries)
-  },[entries, hydrated])
+    writeStoredEntries(userEntries)
+  },[userEntries, hydrated])
 
   async function handleSubmit({ chapterTwo }){
     const text = normalizeEntryText(chapterTwo)
@@ -75,14 +85,20 @@ export default function Home(){
       relations: []
     }
 
-    const nextEntries = [entry, ...entries.filter((item) => item && item.id !== entry.id)]
-    setEntries(nextEntries)
+    const nextEntries = [entry, ...userEntries.filter((item) => item && item.id !== entry.id)]
+    setUserEntries(nextEntries)
     setSubmitted(true)
     writeStoredEntries(nextEntries)
   }
 
-  const latestEntry = entries[0] || null
-  const archiveEntries = entries.slice(1)
+  const semanticEntries = useMemo(() => {
+    return [...seedEntries, ...userEntries]
+      .filter((entry) => entry && entry.text)
+      .slice()
+      .sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0))
+  }, [userEntries])
+
+  const latestEntry = userEntries[0] || seedEntries[0] || null
 
   return (
     <div className="container-full">
@@ -91,26 +107,26 @@ export default function Home(){
           <EntryForm onSubmit={handleSubmit} />
         </div>
       ) : (
-        <div style={{ maxWidth: 760, margin: '0 auto', padding: '56px 0' }}>
-          {latestEntry && (
-            <div style={{ marginBottom: 24, padding: 18, background: '#fff', border: '1px solid #e8e8e8' }}>
-              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Submitted entry</div>
-              <div style={{ fontSize: 16, lineHeight: 1.5 }}>{latestEntry.text}</div>
-              <div style={{ fontSize: 12, color: '#666', marginTop: 8 }}>{formatTimestamp(latestEntry.timestamp)}</div>
-            </div>
-          )}
+        <div className="cell-shell">
+          <div className="cell-shell__frame">
+            <CenterZone
+              entries={semanticEntries}
+              categories={categoriesData}
+              nodes={nodesData}
+              links={linksData}
+              latestEntry={latestEntry}
+            />
 
-          <div style={{ padding: 18, background: '#fff', border: '1px solid #e8e8e8' }}>
-            <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 12 }}>Archive</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {archiveEntries.map((entry) => (
-                <div key={entry.id} style={{ padding: 12, background: '#fafafa', borderLeft: '3px solid #ffd700' }}>
-                  <div style={{ fontSize: 14, lineHeight: 1.5 }}>{entry.text}</div>
-                  <div style={{ fontSize: 12, color: '#666', marginTop: 6 }}>{formatTimestamp(entry.timestamp)}</div>
-                </div>
-              ))}
-            </div>
+            {latestEntry && (
+              <div className="cell-latest-strip">
+                <div className="cell-latest-strip__label">CURRENT ENTRY</div>
+                <div className="cell-latest-strip__text">{latestEntry.text}</div>
+                <div className="cell-latest-strip__meta">{formatTimestamp(latestEntry.timestamp)}</div>
+              </div>
+            )}
           </div>
+
+          <BottomDataChannel entries={semanticEntries} archiveEntries={userEntries} />
         </div>
       )}
     </div>

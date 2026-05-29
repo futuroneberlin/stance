@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
 import * as d3 from 'd3'
-export default function CenterZone({ entries, links = [], categories = [], nodes: persistedNodes = [] }){
+export default function CenterZone({ entries, links = [], categories = [], nodes: persistedNodes = [], latestEntry = null }){
   const ref = useRef(null)
 
   const categoryTags = useMemo(() => (Array.isArray(categories) ? categories : []).slice(0, 12), [categories])
@@ -139,7 +139,14 @@ export default function CenterZone({ entries, links = [], categories = [], nodes
       return
     }
 
-    const clusterColor = d3.scaleOrdinal(d3.schemeTableau10)
+    const clusterColor = d3.scaleOrdinal([
+      '#ff7a18',
+      '#8e8a84',
+      '#b9b4ad',
+      '#60656b',
+      '#d6d1ca',
+      '#2a2a2a'
+    ])
     const clusterByNodeId = new Map()
     semanticModel.clusters.forEach((cluster, index) => {
       cluster.nodes.forEach((node) => clusterByNodeId.set(node.id, { key: cluster.key, index }))
@@ -203,7 +210,7 @@ export default function CenterZone({ entries, links = [], categories = [], nodes
 
     const linkLayer = svg.append('g')
     const link = linkLayer.selectAll('line').data(filteredLinks).enter().append('line')
-      .attr('stroke', (d) => d.relationType === 'classified_as' ? '#bfa200' : '#cfcfcf')
+      .attr('stroke', (d) => d.relationType === 'classified_as' ? '#ff7a18' : '#8f8b86')
       .attr('stroke-opacity', (d) => d.relationType === 'semantic_similarity' ? 0.55 : 0.75)
       .attr('stroke-width', (d) => d.relationType === 'semantic_similarity' ? Math.max(1, Math.min(3, 1 + d.weight * 2)) : 1.1)
       .attr('stroke-dasharray', (d) => d.relationType === 'semantic_similarity' ? '0' : '4 5')
@@ -216,11 +223,11 @@ export default function CenterZone({ entries, links = [], categories = [], nodes
     node.append('circle')
       .attr('r', (d) => d.kind === 'category' ? 14 : (d.is_seed ? 11 : 9))
       .attr('fill', (d) => {
-        if(d.kind === 'category') return '#1a1a1a'
-        if(d.is_seed) return '#ffd700'
-        return '#f2f2f2'
+        if(d.kind === 'category') return '#1b1b1b'
+        if(d.is_seed) return '#ff7a18'
+        return '#dedbd6'
       })
-      .attr('stroke', (d) => d.kind === 'category' ? '#fff' : '#d7d7d7')
+      .attr('stroke', (d) => d.kind === 'category' ? '#f5f1ec' : '#b8b2ab')
       .attr('stroke-width', (d) => d.kind === 'category' ? 1.4 : 1)
       .style('cursor', 'pointer')
       .on('mouseenter', function(event, d){
@@ -234,14 +241,14 @@ export default function CenterZone({ entries, links = [], categories = [], nodes
           .attr('stroke', (linkDatum) => {
             const source = typeof linkDatum.source === 'object' ? linkDatum.source.id : linkDatum.source
             const target = typeof linkDatum.target === 'object' ? linkDatum.target.id : linkDatum.target
-            return source === d.id || target === d.id ? '#ffd700' : '#cfcfcf'
+            return source === d.id || target === d.id ? '#ff7a18' : '#8f8b86'
           })
       })
       .on('mouseleave', function(){
         d3.select(this).transition().duration(120).attr('r', (d) => d.kind === 'category' ? 14 : (d.is_seed ? 11 : 9))
         link
           .attr('stroke-opacity', (d) => d.relationType === 'semantic_similarity' ? 0.55 : 0.75)
-          .attr('stroke', (d) => d.relationType === 'classified_as' ? '#bfa200' : '#cfcfcf')
+          .attr('stroke', (d) => d.relationType === 'classified_as' ? '#ff7a18' : '#8f8b86')
       })
 
     node.append('title').text((d) => {
@@ -294,40 +301,53 @@ export default function CenterZone({ entries, links = [], categories = [], nodes
     return ()=> sim.stop()
   },[semanticModel])
 
-  const hasAnyData = semanticModel.nodes.length > 0
+    const hasAnyData = semanticModel.nodes.length > 0
   const visibleSeeds = semanticModel.nodes.filter((node) => node.is_seed).length
   const visibleVisitorEntries = semanticModel.nodes.filter((node) => node.kind === 'visitor_entry').length
+  const nucleusText = latestEntry?.text || entries?.[0]?.text || 'Art is'
 
   return (
-    <div className="zone-content">
-      <div className="zone-label">CENTER</div>
-      <p className="zone-intro">A semantic network of visitor contributions, seed entries and category clusters.</p>
+    <div className="cell-field">
+      <div className="cell-field__header">
+        <div>
+          <div className="cell-field__label">SEMANTIC CELL</div>
+          <p className="cell-field__intro">A nucleus-driven field where inputs, categories and relations condense into one living system.</p>
+        </div>
+        <div className="cell-field__stats">
+          <span>Nodes {semanticModel.nodes.length}</span>
+          <span>Links {semanticModel.links.length}</span>
+          <span>Clusters {semanticModel.clusters.length}</span>
+          <span>Seeds {visibleSeeds}</span>
+          <span>Visitors {visibleVisitorEntries}</span>
+        </div>
+      </div>
+
       {categoryTags.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, margin: '0 0 10px' }}>
+        <div className="cell-field__tags">
           {categoryTags.map((category) => (
-            <span key={category.category_key} style={{ fontSize: 11, padding: '4px 8px', background: '#fff', border: '1px solid #eee' }}>
+            <span key={category.category_key} className="cell-field__tag">
               {category.label} · {category.usage_count}
             </span>
           ))}
         </div>
       )}
-      {hasAnyData ? (
-        <>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 12, color: '#666', marginBottom: 8 }}>
-            <span>Nodes: {semanticModel.nodes.length}</span>
-            <span>Links: {semanticModel.links.length}</span>
-            <span>Clusters: {semanticModel.clusters.length}</span>
-            <span>Seeds: {visibleSeeds}</span>
-            <span>Visitors: {visibleVisitorEntries}</span>
-          </div>
-          <svg ref={ref} style={{ width:'100%', height:'auto', aspectRatio:'1', marginTop:12, minHeight:420, border:'1px solid #e8e8e8', background:'#fff' }} />
-        </>
-      ) : (
-        <div style={{ marginTop: 12, padding: 16, border: '1px solid #e8e8e8', background: '#fff' }}>
-          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>No semantic data yet.</div>
-          <div style={{ fontSize: 12, color: '#666' }}>
-            Seed entries, visitor contributions, and category links will appear here once entries are loaded.
-          </div>
+
+      <div className="cell-stage">
+        <div className="cell-stage__halo cell-stage__halo--one" />
+        <div className="cell-stage__halo cell-stage__halo--two" />
+        <svg ref={ref} className="cell-network-svg" />
+
+        <div className="cell-nucleus">
+          <div className="cell-nucleus__kicker">ART IS</div>
+          <div className="cell-nucleus__title">Art is</div>
+          <div className="cell-nucleus__sub">{nucleusText}</div>
+        </div>
+      </div>
+
+      {!hasAnyData && (
+        <div className="cell-empty-state">
+          <div className="cell-empty-state__title">No semantic data yet.</div>
+          <div className="cell-empty-state__copy">Seed entries, visitor contributions and category links will appear once the cell starts receiving input.</div>
         </div>
       )}
     </div>
