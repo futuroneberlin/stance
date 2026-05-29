@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import * as d3 from 'd3'
 export default function CenterZone({ entries, links = [], categories = [], nodes: persistedNodes = [], latestEntry = null }){
   const ref = useRef(null)
+  const threeRef = useRef(null)
 
   const categoryTags = useMemo(() => (Array.isArray(categories) ? categories : []).slice(0, 12), [categories])
 
@@ -301,6 +302,121 @@ export default function CenterZone({ entries, links = [], categories = [], nodes
     return ()=> sim.stop()
   },[semanticModel])
 
+  /* WebGL nucleus: three.js scene with PBR-like material and parallax */
+  useEffect(()=>{
+    let mounted = true
+    let renderer, scene, camera, mesh, frameId
+
+    // Skip if user prefers reduced motion
+    const prefersReduced = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if(!threeRef.current || prefersReduced) return
+
+    let THREE
+    import('three').then((t)=>{
+      if(!mounted) return
+      THREE = t
+      const container = threeRef.current
+      const width = container.clientWidth || 800
+      const height = container.clientHeight || 600
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
+      renderer.setSize(width, height)
+      renderer.outputColorSpace = THREE.SRGBColorSpace || renderer.outputEncoding
+      container.appendChild(renderer.domElement)
+
+      scene = new THREE.Scene()
+
+      camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000)
+      camera.position.set(0, 0, 48)
+
+      const hemi = new THREE.HemisphereLight(0xffffff, 0x222222, 0.6)
+      scene.add(hemi)
+      const dir = new THREE.DirectionalLight(0xffe8d6, 0.8)
+      dir.position.set(5, 10, 10)
+      scene.add(dir)
+
+      const loader = new THREE.TextureLoader()
+      const baseTex = loader.load('/images/concrete.jpg', ()=> renderer && renderer.render(scene, camera))
+      baseTex.wrapS = baseTex.wrapT = THREE.RepeatWrapping
+      baseTex.repeat.set(1.0, 1.0)
+
+      const material = new THREE.MeshStandardMaterial({
+        map: baseTex,
+        metalness: 0.02,
+        roughness: 0.85,
+        envMapIntensity: 0.6,
+        toneMapped: true
+      })
+
+      // Less-round geometry: icosahedron with moderate detail for facets
+      const geom = new THREE.IcosahedronGeometry(10, 4)
+      mesh = new THREE.Mesh(geom, material)
+      mesh.rotation.x = -0.2
+      scene.add(mesh)
+
+      const onResize = ()=>{
+        const w = container.clientWidth || 800
+        const h = container.clientHeight || 600
+        camera.aspect = w / h
+        camera.updateProjectionMatrix()
+        renderer.setSize(w, h)
+      }
+
+        let targetX = 0
+        let targetY = 0
+        let currentX = 0
+        let currentY = 0
+
+        // declare handlers so we can remove them cleanly
+        let handleMove = (e) => {
+          const x = (e.clientX / window.innerWidth) * 2 - 1
+          const y = -(e.clientY / window.innerHeight) * 2 + 1
+          targetX = x * 0.15
+          targetY = y * 0.12
+        }
+
+        let handleDevice = (ev) => {
+          const gamma = ev.gamma || 0
+          const beta = ev.beta || 0
+          targetX = THREE.MathUtils.clamp(gamma / 45, -1, 1) * 0.12
+          targetY = THREE.MathUtils.clamp(beta / 45, -1, 1) * 0.12
+        }
+
+        window.addEventListener('mousemove', handleMove)
+        window.addEventListener('deviceorientation', handleDevice)
+        window.addEventListener('resize', onResize)
+
+        const tick = ()=>{
+          currentX += (targetX - currentX) * 0.08
+          currentY += (targetY - currentY) * 0.08
+          mesh.rotation.y += 0.0025 + currentX * 0.02
+          mesh.rotation.x += 0.001 + currentY * 0.01
+          renderer.render(scene, camera)
+          frameId = requestAnimationFrame(tick)
+        }
+        tick()
+    }).catch(()=>{})
+
+    return ()=>{
+      mounted = false
+      if(frameId) cancelAnimationFrame(frameId)
+      try{ window.removeEventListener('mousemove', handleMove) }catch(e){}
+      try{ window.removeEventListener('deviceorientation', handleDevice) }catch(e){}
+      try{ window.removeEventListener('resize', onResize) }catch(e){}
+      if(renderer && renderer.domElement && threeRef.current) threeRef.current.removeChild(renderer.domElement)
+      // dispose three resources if possible
+      try{
+        if(mesh && mesh.geometry) mesh.geometry.dispose()
+        if(mesh && mesh.material){
+          if(mesh.material.map) mesh.material.map.dispose()
+          mesh.material.dispose()
+        }
+        if(renderer) renderer.dispose()
+      }catch(e){}
+    }
+  }, [latestEntry])
+
     const hasAnyData = semanticModel.nodes.length > 0
   const visibleSeeds = semanticModel.nodes.filter((node) => node.is_seed).length
   const visibleVisitorEntries = semanticModel.nodes.filter((node) => node.kind === 'visitor_entry').length
@@ -335,6 +451,7 @@ export default function CenterZone({ entries, links = [], categories = [], nodes
       <div className="cell-stage">
         <div className="cell-stage__halo cell-stage__halo--one" />
         <div className="cell-stage__halo cell-stage__halo--two" />
+        <div ref={threeRef} className="cell-network-webgl" style={{position:'absolute',inset:0,zIndex:1}} />
         <svg ref={ref} className="cell-network-svg" />
 
         <div className="cell-nucleus">

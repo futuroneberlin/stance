@@ -418,6 +418,15 @@ body > #__next{
   display:block;
 }
 
+.cell-network-webgl{
+  position:absolute;
+  inset:0;
+  z-index:1;
+  width:100%;
+  height:100%;
+  pointer-events:none; /* don't intercept pointer events from SVG overlays */
+}
+
 .cell-nucleus{
   position:absolute;
   left:50%;
