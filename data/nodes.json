@@ -1,1 +1,170 @@
-[]
+[
+  {
+    "node_id": "entry_1780088819326_qgcrd",
+    "label": "I acted through art today by building",
+    "node_type": "external_entry",
+    "source_entry_id": "entry_1780088819326_qgcrd",
+    "metadata": {
+      "source": "user"
+    }
+  },
+  {
+    "node_id": "cat:concept",
+    "label": "concept",
+    "node_type": "category",
+    "source_entry_id": null,
+    "metadata": {}
+  },
+  {
+    "node_id": "term:acted",
+    "label": "acted",
+    "node_type": "term",
+    "source_entry_id": "entry_1780088819326_qgcrd",
+    "metadata": {}
+  },
+  {
+    "node_id": "term:through",
+    "label": "through",
+    "node_type": "term",
+    "source_entry_id": "entry_1780088819326_qgcrd",
+    "metadata": {}
+  },
+  {
+    "node_id": "term:today",
+    "label": "today",
+    "node_type": "term",
+    "source_entry_id": "entry_1780088819326_qgcrd",
+    "metadata": {}
+  },
+  {
+    "node_id": "term:building",
+    "label": "building",
+    "node_type": "term",
+    "source_entry_id": "entry_1780088819326_qgcrd",
+    "metadata": {}
+  },
+  {
+    "node_id": "wiki_art_0",
+    "label": "Art is Art is a diverse range of cultural activity centered around works utilizing creative or imaginative talents, which are expected to ev",
+    "node_type": "external_entry",
+    "source_entry_id": "wiki_art_0",
+    "metadata": {
+      "source": "wikipedia"
+    }
+  },
+  {
+    "node_id": "cat:intrinsic",
+    "label": "intrinsic",
+    "node_type": "category",
+    "source_entry_id": null,
+    "metadata": {}
+  },
+  {
+    "node_id": "cat:shared",
+    "label": "shared",
+    "node_type": "category",
+    "source_entry_id": null,
+    "metadata": {}
+  },
+  {
+    "node_id": "term:definition",
+    "label": "definition",
+    "node_type": "term",
+    "source_entry_id": "wiki_art_0",
+    "metadata": {}
+  },
+  {
+    "node_id": "term:wikipedia",
+    "label": "wikipedia",
+    "node_type": "term",
+    "source_entry_id": "wiki_art_0",
+    "metadata": {}
+  },
+  {
+    "node_id": "wiki_conceptual_0",
+    "label": "Art is Conceptual art, also referred to as conceptualism, is art in which the concept(s) or idea(s) involved in the work are prioritized equ",
+    "node_type": "external_entry",
+    "source_entry_id": "wiki_conceptual_0",
+    "metadata": {
+      "source": "wikipedia"
+    }
+  },
+  {
+    "node_id": "cat:extrinsic",
+    "label": "extrinsic",
+    "node_type": "category",
+    "source_entry_id": null,
+    "metadata": {}
+  },
+  {
+    "node_id": "term:concept",
+    "label": "concept",
+    "node_type": "term",
+    "source_entry_id": "wiki_conceptual_0",
+    "metadata": {}
+  },
+  {
+    "node_id": "term:contemporary",
+    "label": "contemporary",
+    "node_type": "term",
+    "source_entry_id": "wiki_conceptual_0",
+    "metadata": {}
+  },
+  {
+    "node_id": "wiki_conceptual_1",
+    "label": "Art is Some works of conceptual art may be constructed by anyone simply by following a set of written instructions",
+    "node_type": "external_entry",
+    "source_entry_id": "wiki_conceptual_1",
+    "metadata": {
+      "source": "wikipedia"
+    }
+  },
+  {
+    "node_id": "wikidata_0",
+    "label": "Art is Effigy of a Cantwell knight now presented upright and in a protective glass box",
+    "node_type": "external_entry",
+    "source_entry_id": "wikidata_0",
+    "metadata": {
+      "source": "wikidata"
+    }
+  },
+  {
+    "node_id": "term:cantwell fada",
+    "label": "cantwell fada",
+    "node_type": "term",
+    "source_entry_id": "wikidata_0",
+    "metadata": {}
+  },
+  {
+    "node_id": "wikidata_1",
+    "label": "Art is kinetic artwork by Jean Tinguely",
+    "node_type": "external_entry",
+    "source_entry_id": "wikidata_1",
+    "metadata": {
+      "source": "wikidata"
+    }
+  },
+  {
+    "node_id": "term:chaos i",
+    "label": "chaos i",
+    "node_type": "term",
+    "source_entry_id": "wikidata_1",
+    "metadata": {}
+  },
+  {
+    "node_id": "wikidata_2",
+    "label": "Art is Japanese art form",
+    "node_type": "external_entry",
+    "source_entry_id": "wikidata_2",
+    "metadata": {
+      "source": "wikidata"
+    }
+  },
+  {
+    "node_id": "term:chigiri-e",
+    "label": "chigiri-e",
+    "node_type": "term",
+    "source_entry_id": "wikidata_2",
+    "metadata": {}
+  }
+]

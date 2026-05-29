@@ -1,1 +1,107 @@
-[]
+[
+  {
+    "source": "entry_1780088819326_qgcrd",
+    "target": "wiki_art_0",
+    "weight": 0.35309393180189985
+  },
+  {
+    "source": "entry_1780088819326_qgcrd",
+    "target": "wiki_conceptual_0",
+    "weight": 0.6749655638598864
+  },
+  {
+    "source": "entry_1780088819326_qgcrd",
+    "target": "wiki_conceptual_1",
+    "weight": 0.5
+  },
+  {
+    "source": "entry_1780088819326_qgcrd",
+    "target": "wikidata_0",
+    "weight": 0.5785419118799026
+  },
+  {
+    "source": "entry_1780088819326_qgcrd",
+    "target": "wikidata_1",
+    "weight": 0.502518907629606
+  },
+  {
+    "source": "entry_1780088819326_qgcrd",
+    "target": "wikidata_2",
+    "weight": 0.5454545454545455
+  },
+  {
+    "source": "wiki_art_0",
+    "target": "wiki_conceptual_0",
+    "weight": 0.7386222109866253
+  },
+  {
+    "source": "wiki_art_0",
+    "target": "wiki_conceptual_1",
+    "weight": 0.7209001107622122
+  },
+  {
+    "source": "wiki_art_0",
+    "target": "wikidata_0",
+    "weight": 0.5409627460747114
+  },
+  {
+    "source": "wiki_art_0",
+    "target": "wikidata_1",
+    "weight": 0.45542003404264886
+  },
+  {
+    "source": "wiki_art_0",
+    "target": "wikidata_2",
+    "weight": 0.5590653920196748
+  },
+  {
+    "source": "wiki_conceptual_0",
+    "target": "wiki_conceptual_1",
+    "weight": 0.7392479985132089
+  },
+  {
+    "source": "wiki_conceptual_0",
+    "target": "wikidata_0",
+    "weight": 0.6136363636363638
+  },
+  {
+    "source": "wiki_conceptual_0",
+    "target": "wikidata_1",
+    "weight": 0.6040686963408963
+  },
+  {
+    "source": "wiki_conceptual_0",
+    "target": "wikidata_2",
+    "weight": 0.5785419118799026
+  },
+  {
+    "source": "wiki_conceptual_1",
+    "target": "wikidata_0",
+    "weight": 0.6428243465332251
+  },
+  {
+    "source": "wiki_conceptual_1",
+    "target": "wikidata_1",
+    "weight": 0.6030226891555273
+  },
+  {
+    "source": "wiki_conceptual_1",
+    "target": "wikidata_2",
+    "weight": 0.7272727272727273
+  },
+  {
+    "source": "wikidata_0",
+    "target": "wikidata_1",
+    "weight": 0.3553345272593507
+  },
+  {
+    "source": "wikidata_0",
+    "target": "wikidata_2",
+    "weight": 0.44997704257325755
+  },
+  {
+    "source": "wikidata_1",
+    "target": "wikidata_2",
+    "weight": 0.502518907629606
+  }
+]

@@ -1,1 +1,378 @@
-[]
+[
+  {
+    "source_node_id": "entry_1780088819326_qgcrd",
+    "target_node_id": "cat:concept",
+    "relation_type": "classified_as",
+    "weight": 0.85,
+    "context_entry_id": "entry_1780088819326_qgcrd",
+    "metadata": {}
+  },
+  {
+    "source_node_id": "entry_1780088819326_qgcrd",
+    "target_node_id": "term:acted",
+    "relation_type": "mentions",
+    "weight": 0.65,
+    "context_entry_id": "entry_1780088819326_qgcrd",
+    "metadata": {}
+  },
+  {
+    "source_node_id": "entry_1780088819326_qgcrd",
+    "target_node_id": "term:through",
+    "relation_type": "mentions",
+    "weight": 0.65,
+    "context_entry_id": "entry_1780088819326_qgcrd",
+    "metadata": {}
+  },
+  {
+    "source_node_id": "entry_1780088819326_qgcrd",
+    "target_node_id": "term:today",
+    "relation_type": "mentions",
+    "weight": 0.65,
+    "context_entry_id": "entry_1780088819326_qgcrd",
+    "metadata": {}
+  },
+  {
+    "source_node_id": "entry_1780088819326_qgcrd",
+    "target_node_id": "term:building",
+    "relation_type": "mentions",
+    "weight": 0.65,
+    "context_entry_id": "entry_1780088819326_qgcrd",
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wiki_art_0",
+    "target_node_id": "cat:intrinsic",
+    "relation_type": "classified_as",
+    "weight": 0.85,
+    "context_entry_id": "wiki_art_0",
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wiki_art_0",
+    "target_node_id": "cat:shared",
+    "relation_type": "classified_as",
+    "weight": 0.85,
+    "context_entry_id": "wiki_art_0",
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wiki_art_0",
+    "target_node_id": "term:definition",
+    "relation_type": "mentions",
+    "weight": 0.65,
+    "context_entry_id": "wiki_art_0",
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wiki_art_0",
+    "target_node_id": "term:wikipedia",
+    "relation_type": "mentions",
+    "weight": 0.65,
+    "context_entry_id": "wiki_art_0",
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wiki_conceptual_0",
+    "target_node_id": "cat:extrinsic",
+    "relation_type": "classified_as",
+    "weight": 0.85,
+    "context_entry_id": "wiki_conceptual_0",
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wiki_conceptual_0",
+    "target_node_id": "cat:intrinsic",
+    "relation_type": "classified_as",
+    "weight": 0.85,
+    "context_entry_id": "wiki_conceptual_0",
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wiki_conceptual_0",
+    "target_node_id": "term:concept",
+    "relation_type": "mentions",
+    "weight": 0.65,
+    "context_entry_id": "wiki_conceptual_0",
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wiki_conceptual_0",
+    "target_node_id": "term:contemporary",
+    "relation_type": "mentions",
+    "weight": 0.65,
+    "context_entry_id": "wiki_conceptual_0",
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wiki_conceptual_1",
+    "target_node_id": "cat:extrinsic",
+    "relation_type": "classified_as",
+    "weight": 0.85,
+    "context_entry_id": "wiki_conceptual_1",
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wiki_conceptual_1",
+    "target_node_id": "cat:intrinsic",
+    "relation_type": "classified_as",
+    "weight": 0.85,
+    "context_entry_id": "wiki_conceptual_1",
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wiki_conceptual_1",
+    "target_node_id": "term:concept",
+    "relation_type": "mentions",
+    "weight": 0.65,
+    "context_entry_id": "wiki_conceptual_1",
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wiki_conceptual_1",
+    "target_node_id": "term:contemporary",
+    "relation_type": "mentions",
+    "weight": 0.65,
+    "context_entry_id": "wiki_conceptual_1",
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wikidata_0",
+    "target_node_id": "cat:intrinsic",
+    "relation_type": "classified_as",
+    "weight": 0.85,
+    "context_entry_id": "wikidata_0",
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wikidata_0",
+    "target_node_id": "term:concept",
+    "relation_type": "mentions",
+    "weight": 0.65,
+    "context_entry_id": "wikidata_0",
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wikidata_0",
+    "target_node_id": "term:cantwell fada",
+    "relation_type": "mentions",
+    "weight": 0.65,
+    "context_entry_id": "wikidata_0",
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wikidata_1",
+    "target_node_id": "cat:intrinsic",
+    "relation_type": "classified_as",
+    "weight": 0.85,
+    "context_entry_id": "wikidata_1",
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wikidata_1",
+    "target_node_id": "term:concept",
+    "relation_type": "mentions",
+    "weight": 0.65,
+    "context_entry_id": "wikidata_1",
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wikidata_1",
+    "target_node_id": "term:chaos i",
+    "relation_type": "mentions",
+    "weight": 0.65,
+    "context_entry_id": "wikidata_1",
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wikidata_2",
+    "target_node_id": "cat:intrinsic",
+    "relation_type": "classified_as",
+    "weight": 0.85,
+    "context_entry_id": "wikidata_2",
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wikidata_2",
+    "target_node_id": "term:concept",
+    "relation_type": "mentions",
+    "weight": 0.65,
+    "context_entry_id": "wikidata_2",
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wikidata_2",
+    "target_node_id": "term:chigiri-e",
+    "relation_type": "mentions",
+    "weight": 0.65,
+    "context_entry_id": "wikidata_2",
+    "metadata": {}
+  },
+  {
+    "source_node_id": "entry_1780088819326_qgcrd",
+    "target_node_id": "wiki_art_0",
+    "relation_type": "semantic_similarity",
+    "weight": 0.35309393180189985,
+    "context_entry_id": null,
+    "metadata": {}
+  },
+  {
+    "source_node_id": "entry_1780088819326_qgcrd",
+    "target_node_id": "wiki_conceptual_0",
+    "relation_type": "semantic_similarity",
+    "weight": 0.6749655638598864,
+    "context_entry_id": null,
+    "metadata": {}
+  },
+  {
+    "source_node_id": "entry_1780088819326_qgcrd",
+    "target_node_id": "wiki_conceptual_1",
+    "relation_type": "semantic_similarity",
+    "weight": 0.5,
+    "context_entry_id": null,
+    "metadata": {}
+  },
+  {
+    "source_node_id": "entry_1780088819326_qgcrd",
+    "target_node_id": "wikidata_0",
+    "relation_type": "semantic_similarity",
+    "weight": 0.5785419118799026,
+    "context_entry_id": null,
+    "metadata": {}
+  },
+  {
+    "source_node_id": "entry_1780088819326_qgcrd",
+    "target_node_id": "wikidata_1",
+    "relation_type": "semantic_similarity",
+    "weight": 0.502518907629606,
+    "context_entry_id": null,
+    "metadata": {}
+  },
+  {
+    "source_node_id": "entry_1780088819326_qgcrd",
+    "target_node_id": "wikidata_2",
+    "relation_type": "semantic_similarity",
+    "weight": 0.5454545454545455,
+    "context_entry_id": null,
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wiki_art_0",
+    "target_node_id": "wiki_conceptual_0",
+    "relation_type": "semantic_similarity",
+    "weight": 0.7386222109866253,
+    "context_entry_id": null,
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wiki_art_0",
+    "target_node_id": "wiki_conceptual_1",
+    "relation_type": "semantic_similarity",
+    "weight": 0.7209001107622122,
+    "context_entry_id": null,
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wiki_art_0",
+    "target_node_id": "wikidata_0",
+    "relation_type": "semantic_similarity",
+    "weight": 0.5409627460747114,
+    "context_entry_id": null,
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wiki_art_0",
+    "target_node_id": "wikidata_1",
+    "relation_type": "semantic_similarity",
+    "weight": 0.45542003404264886,
+    "context_entry_id": null,
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wiki_art_0",
+    "target_node_id": "wikidata_2",
+    "relation_type": "semantic_similarity",
+    "weight": 0.5590653920196748,
+    "context_entry_id": null,
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wiki_conceptual_0",
+    "target_node_id": "wiki_conceptual_1",
+    "relation_type": "semantic_similarity",
+    "weight": 0.7392479985132089,
+    "context_entry_id": null,
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wiki_conceptual_0",
+    "target_node_id": "wikidata_0",
+    "relation_type": "semantic_similarity",
+    "weight": 0.6136363636363638,
+    "context_entry_id": null,
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wiki_conceptual_0",
+    "target_node_id": "wikidata_1",
+    "relation_type": "semantic_similarity",
+    "weight": 0.6040686963408963,
+    "context_entry_id": null,
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wiki_conceptual_0",
+    "target_node_id": "wikidata_2",
+    "relation_type": "semantic_similarity",
+    "weight": 0.5785419118799026,
+    "context_entry_id": null,
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wiki_conceptual_1",
+    "target_node_id": "wikidata_0",
+    "relation_type": "semantic_similarity",
+    "weight": 0.6428243465332251,
+    "context_entry_id": null,
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wiki_conceptual_1",
+    "target_node_id": "wikidata_1",
+    "relation_type": "semantic_similarity",
+    "weight": 0.6030226891555273,
+    "context_entry_id": null,
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wiki_conceptual_1",
+    "target_node_id": "wikidata_2",
+    "relation_type": "semantic_similarity",
+    "weight": 0.7272727272727273,
+    "context_entry_id": null,
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wikidata_0",
+    "target_node_id": "wikidata_1",
+    "relation_type": "semantic_similarity",
+    "weight": 0.3553345272593507,
+    "context_entry_id": null,
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wikidata_0",
+    "target_node_id": "wikidata_2",
+    "relation_type": "semantic_similarity",
+    "weight": 0.44997704257325755,
+    "context_entry_id": null,
+    "metadata": {}
+  },
+  {
+    "source_node_id": "wikidata_1",
+    "target_node_id": "wikidata_2",
+    "relation_type": "semantic_similarity",
+    "weight": 0.502518907629606,
+    "context_entry_id": null,
+    "metadata": {}
+  }
+]
