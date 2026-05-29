@@ -32,6 +32,17 @@ body{
   isolation:isolate;
 }
 
+/* Background image: concrete texture (darkened) */
+body{
+  background-image: linear-gradient(180deg, rgba(6,7,8,0.72), rgba(4,5,6,0.84)), url('/images/concrete.jpg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  -webkit-background-size: cover;
+  background-attachment: fixed;
+  filter: grayscale(0.6) contrast(0.96) brightness(0.86);
+}
+
 body::before,
 body::after{
   content:'';
@@ -512,6 +523,66 @@ body > #__next{
   backdrop-filter:blur(18px);
   overflow:hidden;
 }
+.bottom-channel{
+  position:fixed;
+  left:18px;
+  right:18px;
+  bottom:18px;
+  height:72px; /* reduced height */
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  padding:10px 14px;
+  border-radius:10px;
+  background:linear-gradient(90deg, rgba(10,12,14,0.62), rgba(14,16,18,0.42));
+  border:1px solid rgba(255,255,255,0.03);
+  box-shadow:0 8px 30px rgba(0,0,0,0.6), 0 0 28px var(--accent-glow);
+  z-index:40;
+}
+
+.bottom-channel__track{
+  position:relative;
+  height:36px;
+  overflow:hidden;
+  border-radius:8px;
+  background-image: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00)), url('/images/rail.jpg');
+  background-size: auto 48px;
+  background-position: left center;
+  background-repeat: repeat-x;
+}
+
+.bottom-channel__flow{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  padding:6px 12px;
+  transform:translateX(0);
+}
+
+.bottom-channel__card{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  padding:6px 10px;
+  min-width:200px;
+  max-width:320px;
+  color:var(--ink);
+  text-decoration:none;
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00));
+  border-radius:6px;
+  border:1px solid rgba(255,255,255,0.02);
+  box-shadow:0 6px 14px rgba(0,0,0,0.6);
+}
+
+.bottom-channel__card--external .bottom-channel__card-source{color:#9ad7ff}
+.bottom-channel__card--archive .bottom-channel__card-source{color:#ffd19a}
+
+.bottom-channel__card-title{font-weight:600; font-size:12px; color:var(--deep)}
+.bottom-channel__card-meta{font-size:11px; color:var(--muted)}
+
+.bottom-channel__head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.bottom-channel__label{font-family:var(--mono-font);font-size:10px;letter-spacing:0.12em;color:var(--muted)}
+.bottom-channel__title{font-family:var(--display-font);font-size:12px;color:var(--deep)}
 
 .bottom-channel__head{
   display:flex;
