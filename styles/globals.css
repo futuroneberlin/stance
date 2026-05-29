@@ -370,8 +370,8 @@ body > #__next{
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.02);
 }
 
-/* Apply SVG displacement subtly to the cell stage and bottom rail for a shader-like tactile effect */
-.cell-stage,
+/* Apply SVG displacement subtly only to the WebGL canvas and bottom rail for a tactile effect */
+.cell-network-webgl,
 .bottom-channel__track{
   /* reference the inline SVG filter */
   filter: url(#concreteDisplace) saturate(0.98) brightness(0.96);
@@ -380,7 +380,7 @@ body > #__next{
 
 /* Reduce intensity on small screens */
 @media (max-width:900px){
-  .cell-stage, .bottom-channel__track{filter:none}
+  .cell-network-webgl, .bottom-channel__track{filter:none}
 }
 
 .cell-stage__halo{
@@ -421,7 +421,7 @@ body > #__next{
 .cell-network-webgl{
   position:absolute;
   inset:0;
-  z-index:1;
+  z-index:0; /* place WebGL canvas behind SVG and text */
   width:100%;
   height:100%;
   pointer-events:none; /* don't intercept pointer events from SVG overlays */
