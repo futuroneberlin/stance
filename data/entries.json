@@ -1,42 +1,56 @@
 [
   {
-    "id": "entry_1778866234869",
-    "text": "Art is test",
+    "id": "seed_arts_001",
+    "text": "Art is a shared rehearsal for civic attention.",
     "category": [
-      "shared"
+      "shared",
+      "intrinsic"
     ],
-    "timestamp": 1778866234,
-    "relations": []
-  },
-  {
-    "id": "entry_1778866507631",
-    "text": "Art is test",
-    "category": [
-      "shared"
-    ],
-    "timestamp": 1778866507,
-    "relations": []
-  },
-  {
-    "id": "entry_1778866508232",
-    "text": "I acted through art today by test",
-    "category": [
-      "shared"
-    ],
-    "timestamp": 1778866508,
+    "timestamp": 1780000000,
     "relations": [
-      "acted",
-      "through",
-      "today"
-    ]
+      "rehearsal",
+      "attention",
+      "civic"
+    ],
+    "source": "seed",
+    "is_seed": true,
+    "is_visible": true,
+    "moderation_status": "approved"
   },
   {
-    "id": "entry_1779266884992_1fk9q",
-    "text": "Art is test",
-    "category": [],
-    "timestamp": 1779266884,
-    "relations": [],
-    "source": "user",
-    "moderation_status": "pending"
+    "id": "seed_arts_002",
+    "text": "I acted through art today by preparing the room for others.",
+    "category": [
+      "collective",
+      "shared"
+    ],
+    "timestamp": 1780000600,
+    "relations": [
+      "preparing",
+      "room",
+      "others"
+    ],
+    "source": "seed",
+    "is_seed": true,
+    "is_visible": true,
+    "moderation_status": "approved"
+  },
+  {
+    "id": "seed_arts_003",
+    "text": "I acted through art today by leaving a trace for the next participant.",
+    "category": [
+      "collective",
+      "emotional"
+    ],
+    "timestamp": 1780001200,
+    "relations": [
+      "trace",
+      "next",
+      "participant"
+    ],
+    "source": "seed",
+    "is_seed": true,
+    "is_visible": true,
+    "moderation_status": "approved"
   }
 ]

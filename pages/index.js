@@ -11,6 +11,9 @@ import { buildSemanticArtifacts } from '../lib/semanticPipeline'
 
 export default function Home(){
   const [entries, setEntries] = useState([])
+  const [archiveEntries, setArchiveEntries] = useState([])
+  const [archiveLoading, setArchiveLoading] = useState(false)
+  const [archiveError, setArchiveError] = useState('')
   const [nodes, setNodes] = useState([])
   const [categories, setCategories] = useState([])
   const [links, setLinks] = useState([])
@@ -33,9 +36,12 @@ export default function Home(){
     if(!submitted) return
     let mounted = true
     async function load(){
+      setArchiveLoading(true)
+      setArchiveError('')
       try{
         const remoteData = await loadEntries()
         if(Array.isArray(remoteData) && mounted){
+          setArchiveEntries(remoteData)
           setEntries(remoteData)
         }
 
@@ -75,6 +81,13 @@ export default function Home(){
         }
       }catch(err){
         console.error('Load error:', err)
+        if(mounted){
+          setArchiveError('Failed to load archived entries.')
+        }
+      }finally{
+        if(mounted){
+          setArchiveLoading(false)
+        }
       }
     }
 
@@ -87,6 +100,7 @@ export default function Home(){
     // start processing
     setProcessing(true)
     setProcessingMessage('Saving your contribution...')
+    setArchiveError('')
 
     try{
       localStorage.removeItem('entered')
@@ -112,27 +126,27 @@ export default function Home(){
         }
       }
 
-      // verify insertion succeeded by reloading persisted entries
-      try{
-        const persisted = await loadEntries()
-        if(Array.isArray(persisted)){
-          // ensure saved entries appear in persisted list; merge if necessary
-          const byId = new Map(persisted.map((e)=>[String(e.id), e]))
-          for(const se of savedEntries){ if(se && se.id) byId.set(String(se.id), se) }
-          const merged = Array.from(byId.values())
-          setEntries(merged)
-        }
-      }catch(e){
-        console.warn('Failed to reload entries after save', e)
-        // fallback: include saved entries into current state
-        if(savedEntries.length){
-          setEntries((prev)=>{
-            const byId = new Map((Array.isArray(prev)?prev:[]).map(e=>[String(e.id), e]))
-            for(const se of savedEntries){ if(se && se.id) byId.set(String(se.id), se) }
-            return Array.from(byId.values())
-          })
-        }
+      if(!savedEntries.length){
+        throw new Error('No entry was returned from the save operation.')
       }
+
+      // verify insertion succeeded by reloading persisted entries
+      const persisted = await loadEntries()
+      if(!Array.isArray(persisted)){
+        throw new Error('Archive retrieval did not return a list.')
+      }
+
+      const persistedById = new Map(persisted.map((e)=>[String(e.id), e]))
+      for(const se of savedEntries){ if(se && se.id) persistedById.set(String(se.id), se) }
+      const persistedMerged = Array.from(persistedById.values())
+      const savedIds = new Set(savedEntries.map((e)=>String(e.id)))
+      const verified = persistedMerged.some((entry) => savedIds.has(String(entry.id)))
+      if(!verified){
+        throw new Error('Saved entry could not be verified in archive retrieval.')
+      }
+
+      setArchiveEntries(persistedMerged)
+      setEntries(persistedMerged)
 
       setProcessingMessage('Fetching external references...')
       // fetch external internet data
@@ -141,9 +155,9 @@ export default function Home(){
       const external = (defData && defData.entries) ? defData.entries : []
 
       // request embeddings from server (OpenAI if configured, otherwise local fallback)
-      const merged = [...(entries || []), ...savedEntries, ...external]
+      const semanticMerged = [...(entries || []), ...savedEntries, ...external]
       const byId = new Map()
-      for(const e of merged){ if(e && e.id) byId.set(e.id, e) }
+      for(const e of semanticMerged){ if(e && e.id) byId.set(e.id, e) }
       const all = Array.from(byId.values())
 
       const embedReqItems = all.map((e)=>({ id: e.id, text: e.text }))
@@ -188,6 +202,7 @@ export default function Home(){
 
     }catch(err){
       console.error('processing error', err)
+      setArchiveError(err?.message || 'Failed to persist archive entry.')
       setProcessing(false)
       // fallback: reveal anyway but keep entries
       setSubmitted(true)
@@ -234,7 +249,17 @@ export default function Home(){
                   <CenterZone entries={entries} links={links.length ? links : simLinks} categories={categories} nodes={nodes} />
                 </div>
                 <div className="zone-column zone-right">
-                  <RightZone submitted={submitted} entries={entries} onSubmit={handleSubmit} categories={categories} nodes={nodes} links={links} />
+                  <RightZone
+                    submitted={submitted}
+                    entries={archiveEntries.length ? archiveEntries : entries}
+                    archiveEntries={archiveEntries}
+                    archiveLoading={archiveLoading}
+                    archiveError={archiveError}
+                    onSubmit={handleSubmit}
+                    categories={categories}
+                    nodes={nodes}
+                    links={links}
+                  />
                 </div>
               </div>
             </div>

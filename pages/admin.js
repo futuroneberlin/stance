@@ -72,7 +72,7 @@ export default function AdminPage(){
     setEntries((prev) => prev.filter((e) => e.id !== id))
   }
 
-  async function updateStatus(id, moderationStatus){
+  async function updateEntry(id, patch){
     if(!savedKey){
       setError('Bitte Admin-Key speichern.')
       return
@@ -84,14 +84,18 @@ export default function AdminPage(){
         'Content-Type': 'application/json',
         'x-admin-key': savedKey
       },
-      body: JSON.stringify({ moderationStatus })
+      body: JSON.stringify(patch)
     })
     const data = await res.json()
     if(!res.ok){
-      setError(data.error || 'Status-Update fehlgeschlagen.')
+      setError(data.error || 'Update fehlgeschlagen.')
       return
     }
-    setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, moderationStatus } : e)))
+    setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)))
+  }
+
+  async function toggleSeedVisibility(entry, isVisible){
+    await updateEntry(entry.id, { is_visible: isVisible })
   }
 
   return (
@@ -136,11 +140,18 @@ export default function AdminPage(){
           <div key={entry.id} style={{ borderTop: '1px solid #e8e8e8', paddingTop: 12, marginTop: 12 }}>
             <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 4 }}>{entry.text}</div>
             <div style={{ fontSize: 12, color: '#999', marginBottom: 8 }}>
-              ID: {entry.id} · {(entry.category || []).join(', ') || 'uncategorized'} · Status: {entry.moderationStatus || entry.moderation_status || 'none'}
+              ID: {entry.id} · {(entry.category || []).join(', ') || 'uncategorized'} · Status: {entry.moderationStatus || entry.moderation_status || 'none'} · {entry.is_seed ? 'seed' : 'visitor'} · {entry.is_visible === false ? 'hidden' : 'visible'}
             </div>
+            {entry.is_seed && (
+              <div style={{ fontSize: 12, color: '#666', marginBottom: 8 }}>
+                Seed entry controls
+              </div>
+            )}
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              <button className="btn" type="button" onClick={() => updateStatus(entry.id, 'approved')} style={{ fontSize: 12, padding: '7px 11px' }}>→ Approve</button>
-              <button className="btn" type="button" onClick={() => updateStatus(entry.id, 'flagged')} style={{ fontSize: 12, padding: '7px 11px', background: '#ffcccb' }}>→ Flag</button>
+              {!entry.is_seed && <button className="btn" type="button" onClick={() => updateEntry(entry.id, { moderationStatus: 'approved' })} style={{ fontSize: 12, padding: '7px 11px' }}>→ Approve</button>}
+              {!entry.is_seed && <button className="btn" type="button" onClick={() => updateEntry(entry.id, { moderationStatus: 'flagged' })} style={{ fontSize: 12, padding: '7px 11px', background: '#ffcccb' }}>→ Flag</button>}
+              {entry.is_seed && entry.is_visible !== false && <button className="btn" type="button" onClick={() => toggleSeedVisibility(entry, false)} style={{ fontSize: 12, padding: '7px 11px', background: '#ddd', color: '#222' }}>Hide seed</button>}
+              {entry.is_seed && entry.is_visible === false && <button className="btn" type="button" onClick={() => toggleSeedVisibility(entry, true)} style={{ fontSize: 12, padding: '7px 11px' }}>Restore seed</button>}
               <button className="btn" type="button" onClick={() => deleteEntry(entry.id)} style={{ fontSize: 12, padding: '7px 11px', background: '#ddd', color: '#222' }}>Delete</button>
             </div>
           </div>
