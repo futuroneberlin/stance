@@ -1,5 +1,38 @@
 import { useEffect, useMemo, useRef } from 'react'
 import * as d3 from 'd3'
+
+function getCategoryMotionProfile(categories = []){
+  const values = (Array.isArray(categories) ? categories : []).map((category) => String(category?.label || category?.category_key || '').toLowerCase())
+  const has = (needle) => values.some((value) => value.includes(needle))
+  return {
+    material: has('mater') ? 1 : 0,
+    system: has('system') ? 1 : 0,
+    social: has('sozial') || has('social') ? 1 : 0,
+    introspective: has('intros') ? 1 : 0
+  }
+}
+
+function buildNoiseTexture(THREE){
+  const canvas = document.createElement('canvas')
+  canvas.width = 256
+  canvas.height = 256
+  const context = canvas.getContext('2d')
+  if(!context) return null
+  const image = context.createImageData(canvas.width, canvas.height)
+  for(let index = 0; index < image.data.length; index += 4){
+    const value = 124 + Math.floor((Math.random() - 0.5) * 42)
+    image.data[index] = value
+    image.data[index + 1] = value
+    image.data[index + 2] = value
+    image.data[index + 3] = 255
+  }
+  context.putImageData(image, 0, 0)
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping
+  texture.repeat.set(4, 4)
+  return texture
+}
+
 export default function CenterZone({ entries, links = [], categories = [], nodes: persistedNodes = [], latestEntry = null }){
   const ref = useRef(null)
   const threeRef = useRef(null)
@@ -110,6 +143,8 @@ export default function CenterZone({ entries, links = [], categories = [], nodes
       }))
     }
   }, [entries, categories, links, persistedNodes])
+
+  const motionProfile = useMemo(() => getCategoryMotionProfile(categories), [categories])
 
   useEffect(()=>{
     if(!ref.current) return
@@ -305,7 +340,11 @@ export default function CenterZone({ entries, links = [], categories = [], nodes
   /* WebGL nucleus: three.js scene with PBR-like material and parallax */
   useEffect(()=>{
     let mounted = true
-    let renderer, scene, camera, mesh, frameId
+    let renderer, scene, camera, frameId
+    let roomGroup, nucleusGroup, floorMat, wallMat, ceilingMat, slabMat, glowMat
+    let handleMove = null
+    let handleDevice = null
+    let onResize = null
 
     // Skip if user prefers reduced motion
     const prefersReduced = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -323,37 +362,204 @@ export default function CenterZone({ entries, links = [], categories = [], nodes
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
       renderer.setSize(width, height)
       renderer.outputColorSpace = THREE.SRGBColorSpace || renderer.outputEncoding
+      renderer.shadowMap.enabled = true
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap
       container.appendChild(renderer.domElement)
 
       scene = new THREE.Scene()
+      scene.fog = new THREE.Fog(0x06070a, 34, 145)
 
       camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000)
-      camera.position.set(0, 0, 48)
+      camera.position.set(0, 4, 54)
+      camera.lookAt(0, 2, 0)
 
-      const hemi = new THREE.HemisphereLight(0xffffff, 0x222222, 0.6)
+      const hemi = new THREE.HemisphereLight(0xb8d4ff, 0x050608, 0.44)
       scene.add(hemi)
-      const dir = new THREE.DirectionalLight(0xffe8d6, 0.8)
-      dir.position.set(5, 10, 10)
-      scene.add(dir)
+      const keyLight = new THREE.DirectionalLight(0xffffff, 1.0)
+      keyLight.position.set(-12, 18, 18)
+      keyLight.castShadow = true
+      keyLight.shadow.mapSize.set(1024, 1024)
+      scene.add(keyLight)
+
+      const orangeLight = new THREE.PointLight(0xff7a18, 1.35, 120, 2)
+      orangeLight.position.set(0, -6, 14)
+      scene.add(orangeLight)
+
+      const cyanLight = new THREE.PointLight(0x3dbbff, 1.7, 160, 2)
+      cyanLight.position.set(20, 2, 8)
+      scene.add(cyanLight)
+
+      const rimLight = new THREE.DirectionalLight(0x7aa4ff, 0.4)
+      rimLight.position.set(18, 8, -10)
+      scene.add(rimLight)
 
       const loader = new THREE.TextureLoader()
       const baseTex = loader.load('/images/concrete.jpg', ()=> renderer && renderer.render(scene, camera))
       baseTex.wrapS = baseTex.wrapT = THREE.RepeatWrapping
-      baseTex.repeat.set(1.0, 1.0)
+      baseTex.repeat.set(2.25, 2.25)
+      baseTex.colorSpace = THREE.SRGBColorSpace || baseTex.encoding
 
-      const material = new THREE.MeshStandardMaterial({
+      const noiseTex = buildNoiseTexture(THREE)
+      if(noiseTex) noiseTex.needsUpdate = true
+
+      const concreteMaterial = new THREE.MeshStandardMaterial({
         map: baseTex,
+        roughness: 0.98,
         metalness: 0.02,
-        roughness: 0.85,
-        envMapIntensity: 0.6,
+        color: 0xc7c4be,
+        bumpMap: noiseTex || null,
+        bumpScale: 0.35,
+        emissive: 0x000000,
+        emissiveIntensity: 0,
+        envMapIntensity: 0.15,
         toneMapped: true
       })
 
-      // Less-round geometry: icosahedron with moderate detail for facets
-      const geom = new THREE.IcosahedronGeometry(10, 4)
-      mesh = new THREE.Mesh(geom, material)
-      mesh.rotation.x = -0.2
-      scene.add(mesh)
+      const darkMaterial = new THREE.MeshStandardMaterial({
+        color: 0x111316,
+        roughness: 0.88,
+        metalness: 0.12,
+        map: baseTex,
+        bumpMap: noiseTex || null,
+        bumpScale: 0.12,
+        envMapIntensity: 0.08,
+        toneMapped: true
+      })
+
+      const glowMaterial = new THREE.MeshStandardMaterial({
+        color: 0x090909,
+        emissive: 0x3dbbff,
+        emissiveIntensity: 1.4,
+        roughness: 0.22,
+        metalness: 0.88,
+        toneMapped: false
+      })
+
+      roomGroup = new THREE.Group()
+      scene.add(roomGroup)
+
+      const floor = new THREE.Mesh(new THREE.BoxGeometry(120, 2.2, 120), concreteMaterial)
+      floor.position.set(0, -14, 0)
+      floor.receiveShadow = true
+      roomGroup.add(floor)
+
+      const ceiling = new THREE.Mesh(new THREE.BoxGeometry(120, 2.2, 120), darkMaterial)
+      ceiling.position.set(0, 24, -10)
+      ceiling.receiveShadow = true
+      roomGroup.add(ceiling)
+
+      const leftWall = new THREE.Mesh(new THREE.BoxGeometry(2.2, 50, 120), concreteMaterial)
+      leftWall.position.set(-22, 4, 0)
+      leftWall.rotation.z = 0.012
+      roomGroup.add(leftWall)
+
+      const rightWall = new THREE.Mesh(new THREE.BoxGeometry(2.2, 50, 120), darkMaterial)
+      rightWall.position.set(22, 4, -4)
+      rightWall.rotation.z = -0.014
+      roomGroup.add(rightWall)
+
+      const backWall = new THREE.Mesh(new THREE.BoxGeometry(120, 50, 2.2), darkMaterial)
+      backWall.position.set(0, 3, -42)
+      roomGroup.add(backWall)
+
+      const slabMaterial = new THREE.MeshStandardMaterial({
+        color: 0x1b1c1f,
+        roughness: 0.82,
+        metalness: 0.18,
+        map: baseTex,
+        bumpMap: noiseTex || null,
+        bumpScale: 0.18,
+        emissive: 0x000000,
+        envMapIntensity: 0.24,
+        toneMapped: true
+      })
+
+      const slabPositions = [
+        [-14, -3, -8, 0.26],
+        [12, 2, -18, -0.18],
+        [-8, 8, -30, 0.12],
+        [15, -1, -36, -0.08]
+      ]
+      slabPositions.forEach(([x, y, z, rot]) => {
+        const slab = new THREE.Mesh(new THREE.BoxGeometry(20, 7, 6), slabMaterial)
+        slab.position.set(x, y, z)
+        slab.rotation.y = rot
+        slab.castShadow = true
+        slab.receiveShadow = true
+        roomGroup.add(slab)
+      })
+
+      const edgeStripGeometry = new THREE.BoxGeometry(0.45, 0.45, 28)
+      const leftEdge = new THREE.Mesh(edgeStripGeometry, glowMaterial)
+      leftEdge.position.set(-18, -9.5, -6)
+      roomGroup.add(leftEdge)
+
+      const rightEdge = new THREE.Mesh(edgeStripGeometry, glowMaterial.clone())
+      rightEdge.material = glowMaterial.clone()
+      rightEdge.material.color = new THREE.Color(0x090909)
+      rightEdge.material.emissive = new THREE.Color(0xff7a18)
+      rightEdge.material.emissiveIntensity = 1.1
+      rightEdge.position.set(18, -9.5, -6)
+      roomGroup.add(rightEdge)
+
+      const ceilingStrip = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.45, 34), glowMaterial.clone())
+      ceilingStrip.material = glowMaterial.clone()
+      ceilingStrip.material.emissive = new THREE.Color(0x3dbbff)
+      ceilingStrip.material.emissiveIntensity = 1.5
+      ceilingStrip.position.set(0, 20.5, -16)
+      roomGroup.add(ceilingStrip)
+
+      nucleusGroup = new THREE.Group()
+      roomGroup.add(nucleusGroup)
+
+      const nucleusCore = new THREE.Mesh(
+        new THREE.BoxGeometry(16, 12, 12),
+        concreteMaterial.clone()
+      )
+      nucleusCore.material.color = new THREE.Color(0xbab4aa)
+      nucleusCore.material.roughness = 0.94
+      nucleusCore.material.bumpScale = 0.28
+      nucleusCore.position.set(0, -1, 0)
+      nucleusCore.castShadow = true
+      nucleusCore.receiveShadow = true
+      nucleusGroup.add(nucleusCore)
+
+      const nucleusCap = new THREE.Mesh(
+        new THREE.BoxGeometry(18, 2, 14),
+        darkMaterial.clone()
+      )
+      nucleusCap.position.set(0, 7.8, 0)
+      nucleusCap.castShadow = true
+      nucleusGroup.add(nucleusCap)
+
+      const orangeRail = new THREE.Mesh(
+        new THREE.BoxGeometry(18, 0.6, 0.6),
+        glowMaterial.clone()
+      )
+      orangeRail.material.emissive = new THREE.Color(0xff7a18)
+      orangeRail.material.emissiveIntensity = 1.7
+      orangeRail.position.set(0, -7.8, 6.4)
+      nucleusGroup.add(orangeRail)
+
+      const blueRail = new THREE.Mesh(
+        new THREE.BoxGeometry(18, 0.6, 0.6),
+        glowMaterial.clone()
+      )
+      blueRail.material.emissive = new THREE.Color(0x3dbbff)
+      blueRail.material.emissiveIntensity = 1.75
+      blueRail.position.set(0, -7.8, -6.4)
+      nucleusGroup.add(blueRail)
+
+      const centralVoid = new THREE.Mesh(
+        new THREE.BoxGeometry(7.4, 8, 7.4),
+        darkMaterial.clone()
+      )
+      centralVoid.position.set(0, -1, 0)
+      nucleusGroup.add(centralVoid)
+
+      const motionBoost = 1 + motionProfile.system * 0.35 + motionProfile.social * 0.12
+      const weightBoost = 1 + motionProfile.material * 0.42
+      const stabilityBoost = 1 + motionProfile.introspective * 0.24
 
       const onResize = ()=>{
         const w = container.clientWidth || 800
@@ -363,39 +569,58 @@ export default function CenterZone({ entries, links = [], categories = [], nodes
         renderer.setSize(w, h)
       }
 
-        let targetX = 0
-        let targetY = 0
-        let currentX = 0
-        let currentY = 0
+      let targetX = 0
+      let targetY = 0
+      let currentX = 0
+      let currentY = 0
 
-        // declare handlers so we can remove them cleanly
-        let handleMove = (e) => {
-          const x = (e.clientX / window.innerWidth) * 2 - 1
-          const y = -(e.clientY / window.innerHeight) * 2 + 1
-          targetX = x * 0.15
-          targetY = y * 0.12
+      // declare handlers so we can remove them cleanly
+      handleMove = (e) => {
+        const x = (e.clientX / window.innerWidth) * 2 - 1
+        const y = -(e.clientY / window.innerHeight) * 2 + 1
+        targetX = x * 0.16 * motionBoost
+        targetY = y * 0.14 * stabilityBoost
+      }
+
+      handleDevice = (ev) => {
+        const gamma = ev.gamma || 0
+        const beta = ev.beta || 0
+        targetX = THREE.MathUtils.clamp(gamma / 45, -1, 1) * 0.12 * motionBoost
+        targetY = THREE.MathUtils.clamp(beta / 45, -1, 1) * 0.12 * stabilityBoost
+      }
+
+      window.addEventListener('mousemove', handleMove)
+      window.addEventListener('deviceorientation', handleDevice)
+      window.addEventListener('resize', onResize)
+
+      const tick = ()=>{
+        currentX += (targetX - currentX) * 0.08
+        currentY += (targetY - currentY) * 0.08
+
+        if(roomGroup){
+          roomGroup.rotation.y += 0.0008 + currentX * 0.01
+          roomGroup.rotation.x = THREE.MathUtils.clamp(currentY * 0.03, -0.08, 0.08)
         }
 
-        let handleDevice = (ev) => {
-          const gamma = ev.gamma || 0
-          const beta = ev.beta || 0
-          targetX = THREE.MathUtils.clamp(gamma / 45, -1, 1) * 0.12
-          targetY = THREE.MathUtils.clamp(beta / 45, -1, 1) * 0.12
+        if(nucleusGroup){
+          nucleusGroup.rotation.y += 0.0016 + currentX * 0.014
+          nucleusGroup.position.y = Math.sin(Date.now() * 0.0014) * 0.25
         }
 
-        window.addEventListener('mousemove', handleMove)
-        window.addEventListener('deviceorientation', handleDevice)
-        window.addEventListener('resize', onResize)
-
-        const tick = ()=>{
-          currentX += (targetX - currentX) * 0.08
-          currentY += (targetY - currentY) * 0.08
-          mesh.rotation.y += 0.0025 + currentX * 0.02
-          mesh.rotation.x += 0.001 + currentY * 0.01
-          renderer.render(scene, camera)
-          frameId = requestAnimationFrame(tick)
+        if(camera){
+          camera.position.x += (currentX * 4.2 - camera.position.x) * 0.02
+          camera.position.y += ((4 + currentY * 2.5) - camera.position.y) * 0.02
+          camera.lookAt(0, 2, -8)
         }
-        tick()
+
+        if(keyLight) keyLight.position.x = -12 + currentX * 8
+        if(orangeLight) orangeLight.position.z = 14 + currentY * 4
+        if(cyanLight) cyanLight.position.y = 2 + currentY * 3
+
+        renderer.render(scene, camera)
+        frameId = requestAnimationFrame(tick)
+      }
+      tick()
     }).catch(()=>{})
 
     return ()=>{
@@ -407,15 +632,20 @@ export default function CenterZone({ entries, links = [], categories = [], nodes
       if(renderer && renderer.domElement && threeRef.current) threeRef.current.removeChild(renderer.domElement)
       // dispose three resources if possible
       try{
-        if(mesh && mesh.geometry) mesh.geometry.dispose()
-        if(mesh && mesh.material){
-          if(mesh.material.map) mesh.material.map.dispose()
-          mesh.material.dispose()
-        }
+        roomGroup?.traverse((object) => {
+          if(object.geometry) object.geometry.dispose()
+          if(object.material){
+            if(Array.isArray(object.material)){
+              object.material.forEach((material) => material?.dispose?.())
+            }else{
+              object.material.dispose()
+            }
+          }
+        })
         if(renderer) renderer.dispose()
       }catch(e){}
     }
-  }, [latestEntry])
+  }, [latestEntry, motionProfile])
 
     const hasAnyData = semanticModel.nodes.length > 0
   const visibleSeeds = semanticModel.nodes.filter((node) => node.is_seed).length
